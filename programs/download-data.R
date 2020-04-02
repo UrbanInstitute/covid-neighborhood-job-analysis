@@ -18,17 +18,15 @@ state_fips <- fromJSON("https://api.census.gov/data/2010/dec/sf1?get=NAME&for=st
 state_fips <- state_fips[, 2][c(2:length(state_fips[, 2]))]
 dl <- state_fips %>% map(download_by_state)
 
-# County (2010)
-download.file(url = "https://www2.census.gov/geo/tiger/GENZ2018/shp/cb_2018_us_county_5m.zip",
-              destfile = "data/raw-data/big/county.zip")
-unzip(zipfile = "data/raw-data/big/county.zip",
-      exdir = "data/raw-data/big")
-file.remove("data/raw-data/big/county.zip")
-
 # LODES data from the Urban Institute Data Catalog
 # All jobs, RAC
 download.file(url = "https://ui-spark-data-public.s3.amazonaws.com/lodes/summarized-files/Tract_level/all_jobs_excluding_fed_jobs/rac_all_tract_level.csv",
               destfile = "data/raw-data/big/rac_all.csv")
 
 # All jobs, RAC, >=$40,000 per year
-# Waiting on Vivian
+download.file(url = "https://urban-data-catalog.s3.amazonaws.com/drupal-root-live/2020/03/30/rac_se03_tract.csv",
+              destfile = "data/raw-data/big/rac_se03.csv")
+
+# BLS CES Data
+download.file(url = "https://download.bls.gov/pub/time.series/ce/ce.data.0.AllCESSeries",
+              destfile = "data/raw-data/big/ces_all.txt")

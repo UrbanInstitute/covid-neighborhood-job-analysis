@@ -15,9 +15,8 @@ This repository contains code to produce the area-level geographic and data file
 ### Required libraries
 
 - tidyverse
-- tigris
 - sf
-- rmapshaper
+- testit
 
 ### download-data.R
 
@@ -29,13 +28,9 @@ Downloads the relevant files to the Raw data directly, if they can be automatica
 
 The file also produces a metro area, county, and city and town name to Census code crosswalk, so that the web application can easily allow users to search by name but still pull files by unique code IDs, which is the naming convention by which they are stored.
 
-The file also produces a county-level simplified geographic file of the United States.
-
 ### produce-data-files.R
 
 `produce_data_files.R` creates the data files at the Census tract level using 2017 LODES data from the [Urban Institute Data Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes). The file uses the all jobs category, and subtracts out jobs paying more than $40,000 per year to focus only on low- and moderate-income jobs. The file keeps only the tract ID, total number of jobs, number of jobs by industry, and jobs by race variables. The files are then stored in a similar way to the geographic files at the metro area, county, and city and town level, measured by tracts that have at least 1% of their population in the larger geographic boundary.
-
-The file also produces a county-level summary of the data.
 
 ### transfer-to-s3.R
 
@@ -67,7 +62,7 @@ All data can be accessed programmatically or manually, using Geocorr 2018. Data 
 
 ## App functionality
 
-The app will show the user two dropdowns, the second of which allows text search and select. Below that is a link that says "Hide job loss assumptions by industry" that hides a group of 20 small sliders and input text boxes on click. Below that is a map. The map displays a county-level summary of the total estimated job loss by county, based on the slider defaults. When the sliders or input boxes change, the map changes in response.
+*Initial Thoughts*: The app will show the user two dropdowns, the second of which allows text search and select. Below that is a link that says "Hide job loss assumptions by industry" that hides a group of 20 small sliders and input text boxes on click. Below that is a map. The map displays a county-level summary of the total estimated job loss by county, based on the slider defaults. When the sliders or input boxes change, the map changes in response.
 
 The first dropdown asks the user to choose by metro area, county, or city and town. Once selected, the following dropdown is highlighted, which allows them to search and/or select from a list the metro area, county, or city and town they want to focus on.
 
