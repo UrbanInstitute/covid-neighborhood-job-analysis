@@ -47,7 +47,7 @@ After files are written out and quality checked, they are stored in S3 in a publ
   
 ### job-loss-by-industry.R
 
-TBD, likely sourced from BLS
+Data sourced from national Bureau of Labor Statistics (BLS) Current Employment Statistics (CES) national data. Because stay at home and other orders happened in a staggered fashion, and the CES reports for the pay period that includes the 12th of the previous month, the initial cut will use national statistics to show the likely impacts across the country on a relative scale. Users can start from these defaults to choose their own scenarios based on their thoughts or better data. Ideally, we update this as better data become available over time.
 
 ## Data Structure
 
@@ -55,10 +55,10 @@ All data can be accessed programmatically or manually, using Geocorr 2018. Data 
 
 - `programs/` stores the relevant programs
 - `data/` stores the data
-  - `raw-data/` stores raw data.
+  - `./raw-data/` stores raw data.
     - `./small/` stores data that can be pushed to Github. The goal is for all manually downloaded data to be committed here, if possible.
     - `./big/` stores data that can't be pushed to Github
-  - `processed-data/` stores processed data, none of which will be written to Github
+  - `./processed-data/` stores processed data, none of which will be written to Github
 
 ## App functionality
 
