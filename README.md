@@ -10,7 +10,6 @@ This repository contains code to produce the area-level geographic and data file
 
 - metro areas
 - counties
-- cities and towns (Census places).
 
 ### Required libraries
 
@@ -22,32 +21,23 @@ This repository contains code to produce the area-level geographic and data file
 
 Downloads the relevant files to the Raw data directly, if they can be automatically downloaded. Some, such as those accessed from Geocorr, cannot be automatically gathered and therefore are manually accessed.
 
-### produce-geo-files.R
-
-`produce_geo_files.R` creates the geographic Census tract-level files, which contain the simplified geometries of Census tracts at the metro area, county, and city and town level. [Geocorr2018](http://mcdc.missouri.edu/applications/geocorr2018.html) is used as the baseline crosswalk to generate the list of tracts in each of these areas, where a tract is considered in the area if at least 1% of the tract, weighted by 2010 census block population, is within the larger geography's boundary.
-
-The file also produces a metro area, county, and city and town name to Census code crosswalk, so that the web application can easily allow users to search by name but still pull files by unique code IDs, which is the naming convention by which they are stored.
-
 ### produce-data-files.R
 
-`produce_data_files.R` creates the data files at the Census tract level using 2017 LODES data from the [Urban Institute Data Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes). The file uses the all jobs category, and subtracts out jobs paying more than $40,000 per year to focus only on low- and moderate-income jobs. The file keeps only the tract ID, total number of jobs, number of jobs by industry, and jobs by race variables. The files are then stored in a similar way to the geographic files at the metro area, county, and city and town level, measured by tracts that have at least 1% of their population in the larger geographic boundary.
+`produce_data_files.R` creates a national data file at the Census tract level using 2017 LODES data from the [Urban Institute Data Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes). The file uses the all jobs category, and subtracts out jobs paying more than $40,000 per year to focus only on low- and moderate-income jobs. The file keeps only the tract ID, total number of jobs, number of jobs by industry, and jobs by race variables. 
+
+Using the `job-loss-by-industry.R` file, the code multiplies the percent job loss by supersector by the number of jobs in each supersector fo0r each Census tract, and uses this to estimate the total number of jobs estimated to be lost by Census tract so far, which we call the `job_loss_index`. A geospatial, national tract level file is written out with the `job_loss_index` field as a variable. (Question: Do we normalize by total number of jobs? Shows two different things.)
+
+This program also produces a national-level summary file by nation, CBSA and county, that calculates the `job_loss_index` per normalized by the number of low income workers.
 
 ### transfer-to-s3.R
 
-After files are written out and quality checked, they are stored in S3 in a publicly available bucket in the following heirarchy:
-
-- `geo/`
-  - `./cbsa/`
-  - `./county/`
-  - `./place/`
-- `data/`
-  - `./cbsa/`
-  - `./county/`
-  - `./place/`
+After files are written out and quality checked, they are stored in S3 in a publicly available bucket.
   
 ### job-loss-by-industry.R
 
-Data sourced from national Bureau of Labor Statistics (BLS) Current Employment Statistics (CES) national data. Because stay at home and other orders happened in a staggered fashion, and the CES reports for the pay period that includes the 12th of the previous month, the initial cut will use national statistics to show the likely impacts across the country on a relative scale. Users can start from these defaults to choose their own scenarios based on their thoughts or better data. Ideally, we update this as better data become available over time.
+Data sourced from national Bureau of Labor Statistics (BLS) Current Employment Statistics (CES) national data. Because stay at home and other orders happened in a staggered fashion, and the CES reports for the pay period that includes the 12th of the previous month, the initial cut will use national statistics to show the likely impacts across the country on a relative scale. 
+
+This file also sources data from the Washington State Employment Security Department, which provides estimates on a weekly basis of initial unemployment claims by industry supersector. We will use these data and apply the relative estimates to the country, until the May BLS CES update, which should provide a better estimate of job loss by industry.
 
 ## Data Structure
 
@@ -62,11 +52,11 @@ All data can be accessed programmatically or manually, using Geocorr 2018. Data 
 
 ## App functionality
 
-*Initial Thoughts*: The app will show the user two dropdowns, the second of which allows text search and select. Below that is a link that says "Hide job loss assumptions by industry" that hides a group of 20 small sliders and input text boxes on click. Below that is a map. The map displays a county-level summary of the total estimated job loss by county, based on the slider defaults. When the sliders or input boxes change, the map changes in response.
+*Second Cut*: The app will show the user two dropdowns, the second of which allows text search and select. Below that is a sentence that talks about the job loss index for that area, then below that is a map. The map displays a tract-level summary of the total estimated job loss by county, based on estimates produced from the R scripts above. 
 
-The first dropdown asks the user to choose by metro area, county, or city and town. Once selected, the following dropdown is highlighted, which allows them to search and/or select from a list the metro area, county, or city and town they want to focus on.
+The first dropdown asks the user to choose by metro area or county. Once selected, the following dropdown is highlighted, which allows them to search and/or select from a list the metro area or county they want to focus on.
 
-Once selected, a map appears. The map pans to the geography and colors all census tracts in the chosen geography by the % of job loss, based on the slider assumptions. When the sliders or input boxes change, the map changes in response.
+Once selected, the map zooms to that location. The map is likely produced in Mapbox and shows census tracts in the chosen geography by the job loss index.
   
 ## Contact
 
