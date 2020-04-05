@@ -43,6 +43,3 @@ docs/
 
 # raw files
 data/raw-data/big/
-
-# processed files
-data/processed-data/
