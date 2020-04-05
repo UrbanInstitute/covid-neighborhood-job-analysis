@@ -33,11 +33,13 @@ This program also produces a national-level summary file by nation, CBSA and cou
 
 After files are written out and quality checked, they are stored in S3 in a publicly available bucket.
   
-### job-loss-by-industry.R
+### job-loss-by-industry-{source}.R
 
-Data sourced from national Bureau of Labor Statistics (BLS) Current Employment Statistics (CES) national data. Because stay at home and other orders happened in a staggered fashion, and the CES reports for the pay period that includes the 12th of the previous month, the initial cut will use national statistics to show the likely impacts across the country on a relative scale. 
+`source = bls`: Data sourced from national Bureau of Labor Statistics (BLS) Current Employment Statistics (CES) national data. Because stay at home and other orders happened in a staggered fashion, and the CES reports for the pay period that includes the 12th of the previous month, the initial cut will use national statistics to show the likely impacts across the country on a relative scale. 
 
-This file also sources data from the Washington State Employment Security Department, which provides estimates on a weekly basis of initial unemployment claims by industry supersector. We will use these data and apply the relative estimates to the country by comparing job loss relative to NAICS sector from BLS QCEW data, until the May BLS CES update, which should provide a better estimate of job loss by industry.
+`source = wa`: This file also sources data from the Washington State Employment Security Department, which provides estimates on a weekly basis of initial unemployment claims by industry supersector. We will use these data and apply the relative estimates to the country by comparing job loss relative to NAICS sector from BLS QCEW data, until the May BLS CES update, which should provide a better estimate of job loss by industry.
+
+The two programs have the same two columns, `percent_change_employment` and `lodes_var`, so that the BLS data, when they are released in May, can be substituted for WA state data. Note that WA state data does not capture % change in employment, as it only includes unemployment claims, not new hires, but should be a decent proxy for relative job loss among industries in the short term.
 
 ## Data Structure
 
