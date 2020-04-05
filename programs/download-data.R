@@ -30,3 +30,18 @@ download.file(url = "https://urban-data-catalog.s3.amazonaws.com/drupal-root-liv
 # BLS CES Data
 download.file(url = "https://download.bls.gov/pub/time.series/ce/ce.data.0.AllCESSeries",
               destfile = "data/raw-data/big/ces_all.txt")
+
+# BLS QCEW Data for Washington (SAE does not have all industries for WA)
+download.file(url = "https://data.bls.gov/cew/data/files/2019/csv/2019_qtrly_by_area.zip",
+              destfile = "data/raw-data/big/wa_qcew.zip")
+unzip("data/raw-data/big/wa_qcew.zip",
+      files = c("2019.q1-q3.by_area/2019.q1-q3 53000 Washington -- Statewide.csv"),
+      exdir = "data/raw-data/big")
+file.remove("data/raw-data/big/wa_qcew.zip")
+file.rename(from = "data/raw-data/big/2019.q1-q3.by_area/2019.q1-q3 53000 Washington -- Statewide.csv",
+            to = "data/raw-data/big/wa_qcew.csv")
+unlink("data/raw-data/big/2019.q1-q3.by_area", recursive = TRUE)
+
+# WA state unemployment estimates, most recent
+download.file(url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week 12_2020.xlsx",
+              destfile = "data/raw-data/big/wa_claims.xlsx")
