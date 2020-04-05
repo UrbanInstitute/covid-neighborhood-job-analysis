@@ -61,16 +61,16 @@ ces_series_reference <- join_prep(ces_series_reference, "reference")
 # Join data together and calculate change
 job_change <- ces_series_reference %>%
                merge(ces_series_latest, by = "series_id", all.x = TRUE) %>%
-               mutate(job_change = latest / reference - 1)
+               mutate(percent_change_employment = latest / reference - 1)
 
 # Add LED supersector codes
 map_supersector <- function(series_id){
-  lodes_crosswalk[substr(series_id, 4, 11)][[1]]
+  str_glue("CNS", lodes_crosswalk[substr(series_id, 4, 11)][[1]])
 }
 job_change_led <- job_change %>%
-                    mutate(led_variable = series_id %>%
+                    mutate(lodes_var = series_id %>%
                                             map_chr(map_supersector)) %>%
-                    arrange(led_variable)
+                    arrange(lodes_var)
 
 # Write out
 job_change_led %>% 

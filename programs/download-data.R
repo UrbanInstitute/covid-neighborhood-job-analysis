@@ -43,5 +43,7 @@ file.rename(from = "data/raw-data/big/2019.q1-q3.by_area/2019.q1-q3 53000 Washin
 unlink("data/raw-data/big/2019.q1-q3.by_area", recursive = TRUE)
 
 # WA state unemployment estimates, most recent
+# NOTE this file gets corrupted when automatically downloaded, so I manually
+# downloaded this to the small folder given its size
 download.file(url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week 12_2020.xlsx",
-              destfile = "data/raw-data/big/wa_claims.xlsx")
+              destfile = "data/raw-data/big/UI claims week 12_2020.xlsx")
