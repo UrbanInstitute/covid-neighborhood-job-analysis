@@ -48,11 +48,13 @@ latest_year <- max(ces_series_latest$year)
 ces_series_reference <- ces_series_subset_m %>%
                           filter(year == start_year) %>%
                           filter(month == start_month) 
+
 # Function to remove and rename columns to prep for join
+# Chris note: altered a little - earlier version wasn't working for me "Error: All arguments must be named"
 join_prep <- function(df, col_name){
   df %>% 
     select(series_id, value) %>%
-    rename(setNames("value", col_name))
+    rename_(.dots = setNames("value", col_name))
 }
 # Remove and rename columns
 ces_series_latest <- join_prep(ces_series_latest, "latest")

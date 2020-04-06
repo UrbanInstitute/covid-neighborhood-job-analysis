@@ -67,6 +67,12 @@ All data can be accessed programmatically or manually, using Geocorr 2018. Data 
 The first dropdown asks the user to choose by metro area, county, or city and town. Once selected, the following dropdown is highlighted, which allows them to search and/or select from a list the metro area, county, or city and town they want to focus on.
 
 Once selected, a map appears. The map pans to the geography and colors all census tracts in the chosen geography by the % of job loss, based on the slider assumptions. When the sliders or input boxes change, the map changes in response.
+
+## Caveats
+
+* Residence Area Characteristics (RAC) data from LODES reflect the most recent year of data, which is 2017 for most tracts. 2016 data are used, however, for tracts within Alaska and South Dakota and for tracts inside counties that are bordering South Dakota. Worker Area Characteristics (WAC) data, which is an input for RAC, are not available for South Dakota and Alaska in 2017. Therefore, the  tracts inside and around these two states will have undercounts - for inside South Dakota and Alaska, the undercounted reflect people that both work and live in the state, and for outside South Dakota, the undercounted reflect people that live outside of South Dakota and work within South Dakota. 
+* The CES data used can tell us something about the relative decrease in jobs by industry, but is is only recent up to the 12th of each month. Therefore, we cannot interpet CES numbers as current absolute job loss. Additionally, the relative decrease in jobs by industry may differ over time, meaning more recent data may show different results. 
+
   
 ## Contact
 
