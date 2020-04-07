@@ -16,6 +16,8 @@ This repository contains code to produce the area-level geographic and data file
 - tidyverse
 - sf
 - testit
+- urbnmapr
+- aws.s3
 
 ### download-data.R
 
@@ -58,7 +60,13 @@ All data can be accessed programmatically or manually, using Geocorr 2018. Data 
 
 The first dropdown asks the user to choose by metro area or county. Once selected, the following dropdown is highlighted, which allows them to search and/or select from a list the metro area or county they want to focus on.
 
-Once selected, the map zooms to that location. The map is likely produced in Mapbox and shows census tracts in the chosen geography by the job loss index.
+Once selected, the map zooms to that location. The map is likely produced in Mapbox and shows census tracts in the chosen geography by the job loss index. Above the map, the app will show the proportion of low-income jobs that were lost in the chosen geography over the total number of low-income jobs.
+
+## Caveats
+
+* Residence Area Characteristics (RAC) data from LODES reflect the most recent year of data, which is 2017 for most tracts. 2016 data are used, however, for tracts within Alaska and South Dakota and for tracts inside counties that are bordering South Dakota. Worker Area Characteristics (WAC) data, which is an input for RAC, are not available for South Dakota and Alaska in 2017. Therefore, the  tracts inside and around these two states will have undercounts - for inside South Dakota and Alaska, the undercounted reflect people that both work and live in the state, and for outside South Dakota, the undercounted reflect people that live outside of South Dakota and work within South Dakota. 
+
+* Because data are not available related to the number of low-income job losses, we estimate low-income job loss based off of the rate of job loss in Washington State, or, when available, the rate of job loss at the national level. These are estimates and will be different insofar as the rate of job loss varies within industries among different income levels. 
   
 ## Contact
 

@@ -38,6 +38,7 @@ unzip("data/raw-data/big/wa_qcew.zip",
       files = c("2019.q1-q3.by_area/2019.q1-q3 53000 Washington -- Statewide.csv"),
       exdir = "data/raw-data/big")
 file.remove("data/raw-data/big/wa_qcew.zip")
+
 file.rename(from = "data/raw-data/big/2019.q1-q3.by_area/2019.q1-q3 53000 Washington -- Statewide.csv",
             to = "data/raw-data/big/wa_qcew.csv")
 unlink("data/raw-data/big/2019.q1-q3.by_area", recursive = TRUE)

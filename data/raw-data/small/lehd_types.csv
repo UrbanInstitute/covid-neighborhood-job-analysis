@@ -1,0 +1,30 @@
+lehd_var,lehd_name
+c000,Total jobs
+cns01,"Agriculture, Forestry, Fishing, and Hunting"
+cns02,"Mining, Quarrying, and Oil and Gas Extractions"
+cns03,Utilities
+cns04,Construction
+cns05,Manufacturing
+cns06,Wholesale Trade
+cns07,Retail Trade
+cns08,Transportation and Warehousing
+cns09,Information
+cns10,Finance and Insurance
+cns11,Real Estate and Rental and Leasing
+cns12,"Professional, Scientific, and Technical Services"
+cns13,Management of Companies and Enterprises
+cns14,Administrative and Support and Waste Management and Remediation Services
+cns15,Educational Services
+cns16,Health Care and Social Assistance
+cns17,"Arts, Entertainment, and Recreation"
+cns18,Accomodation and Food Services
+cns19,Other Services
+cns20,Public Administration
+cr01,"White, alone"
+cr02,"Blackor African American, alone"
+cr03,American Indian or Alaska Native alone
+cr04,Asian alone
+cr05,"Native Hawaiaan or Other Pacific Islander, alone"
+cr07,Two or More Race Groups
+ct01,Not Hispanic or Latino
+ct02,Hispanic or Latino
