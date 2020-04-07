@@ -23,18 +23,6 @@ This repository contains code to produce the area-level geographic and data file
 
 Downloads the relevant files to the Raw data directly, if they can be automatically downloaded. Some, such as those accessed from Geocorr, cannot be automatically gathered and therefore are manually accessed.
 
-### produce-data-files.R
-
-`produce_data_files.R` creates a national data file at the Census tract level using 2017 LODES data from the [Urban Institute Data Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes). The file uses the all jobs category, and subtracts out jobs paying more than $40,000 per year to focus only on low- and moderate-income jobs. The file keeps only the tract ID, total number of jobs, number of jobs by industry, and jobs by race variables. 
-
-Using the `job-loss-by-industry.R` file, the code multiplies the percent job loss by supersector by the number of jobs in each supersector fo0r each Census tract, and uses this to estimate the total number of jobs estimated to be lost by Census tract so far, which we call the `job_loss_index`. A geospatial, national tract level file is written out with the `job_loss_index` field as a variable. (Question: Do we normalize by total number of jobs? Shows two different things.)
-
-This program also produces a national-level summary file by nation, CBSA and county, that calculates the `job_loss_index` per normalized by the number of low income workers.
-
-### transfer-to-s3.R
-
-After files are written out and quality checked, they are stored in S3 in a publicly available bucket.
-  
 ### job-loss-by-industry-{source}.R
 
 `source = bls`: Data sourced from national Bureau of Labor Statistics (BLS) Current Employment Statistics (CES) national data. Because stay at home and other orders happened in a staggered fashion, and the CES reports for the pay period that includes the 12th of the previous month, the initial cut will use national statistics to show the likely impacts across the country on a relative scale. 
@@ -42,6 +30,18 @@ After files are written out and quality checked, they are stored in S3 in a publ
 `source = wa`: This file also sources data from the Washington State Employment Security Department, which provides estimates on a weekly basis of initial unemployment claims by industry supersector. We will use these data and apply the relative estimates to the country by comparing job loss relative to NAICS sector from BLS QCEW data, until the May BLS CES update, which should provide a better estimate of job loss by industry.
 
 The two programs have the same two columns, `percent_change_employment` and `lodes_var`, so that the BLS data, when they are released in May, can be substituted for WA state data. Note that WA state data does not capture % change in employment, as it only includes unemployment claims, not new hires, but should be a decent proxy for relative job loss among industries in the short term.
+
+### produce-geo-files.R and produce-data-files.R (in that order)
+
+`produce_data_files.R` creates a national data file at the Census tract level using 2017 LODES data from the [Urban Institute Data Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes). The file uses the all jobs category, and subtracts out jobs paying more than $40,000 per year to focus only on low- and moderate-income jobs. The file keeps only the tract ID, total number of jobs, number of jobs by industry, and jobs by race variables. 
+
+Using the `job-loss-by-industry.R` file, the code multiplies the percent job loss by supersector by the number of jobs in each supersector fo0r each Census tract, and uses this to estimate the total number of jobs estimated to be lost by Census tract so far, which we call the `job_loss_index`. A geospatial, national tract level file is written out with the `job_loss_index` field as a variable. (Question: Do we normalize by total number of jobs? Shows two different things.)
+
+This program also produces a national-level summary file by nation, CBSA and county, that calculates the `job_loss_index` per normalized by the number of low income workers, along with bounding boxes for CBSAs and counties.
+
+### transfer-to-s3.R
+
+After files are written out and quality checked, they are stored in S3 in a publicly available bucket.
 
 ## Data Structure
 
