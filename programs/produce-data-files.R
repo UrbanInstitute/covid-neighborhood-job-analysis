@@ -284,8 +284,7 @@ combined_all <- left_join(total_jobs,
                           total_jobs_all,
                           by = "trct", 
                           suffix = c("_under_40",
-                                     "_all"))  %>%
-                  write_csv("tract_job_loss_index_under_40.csv")
+                                     "_all")) 
 
 #summarise jobs at a group level, cbsa or county, 
 #and compute percentages of job loss for lodes under 40k and total lodes
