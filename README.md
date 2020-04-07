@@ -33,11 +33,11 @@ The two programs have the same two columns, `percent_change_employment` and `lod
 
 ### produce-geo-files.R and produce-data-files.R (in that order)
 
-`produce_data_files.R` creates a national data file at the Census tract level using 2017 LODES data from the [Urban Institute Data Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes). The file uses the all jobs category, and subtracts out jobs paying more than $40,000 per year to focus only on low- and moderate-income jobs. The file keeps only the tract ID, total number of jobs, number of jobs by industry, and jobs by race variables. 
+`produce-geo-files.R` produces the tract/county/cbsa crosswalk, creates the intermediary data needed to choose the tracts that we use 2016 data for instead of 2017 data because of data issues, and reads in the spatial tract data and collapses those tracts into one file. 
 
-Using the `job-loss-by-industry.R` file, the code multiplies the percent job loss by supersector by the number of jobs in each supersector fo0r each Census tract, and uses this to estimate the total number of jobs estimated to be lost by Census tract so far, which we call the `job_loss_index`. A geospatial, national tract level file is written out with the `job_loss_index` field as a variable. (Question: Do we normalize by total number of jobs? Shows two different things.)
+`produce_data_files.R` creates estimates of job loss by tract using 2017 LODES data from the [Urban Institute Data Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes). The program uses the all jobs category, and subtracts out jobs paying more than $40,000 per year to focus only on low- and moderate-income jobs. The code multiplies the percent job loss by supersector data from `job-loss-by-industry-{source}.R` by the number of jobs in each supersector for each Census tract, and uses this to estimate the total number of jobs estimated to be lost by Census tract so far, which we call the `job_loss_index`. A geospatial, national tract level file is written out with the `job_loss_index` field as a variable. (Question: Do we normalize by total number of jobs? Shows two different things. Answer: no - do you want to?) The file also contains the estimated low-income job loss for the tract in each industry.
 
-This program also produces a national-level summary file by nation, CBSA and county, that calculates the `job_loss_index` per normalized by the number of low income workers, along with bounding boxes for CBSAs and counties.
+This program also produces a national-level summary file by CBSA and county, that calculates the low-income `job_loss_index` as a percent of low income workers and the `job_loss_index` as a percent of all workers. Bounding boxes for CBSAs and counties are also included.
 
 ### transfer-to-s3.R
 
