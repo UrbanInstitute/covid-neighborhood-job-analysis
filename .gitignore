@@ -46,3 +46,6 @@ data/raw-data/big/
 
 # geojson files
 *.geojson
+
+#secret keys
+data/raw-data/small/secret_keys.csv
