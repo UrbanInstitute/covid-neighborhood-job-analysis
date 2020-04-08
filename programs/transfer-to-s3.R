@@ -13,6 +13,10 @@ secret_key <- secret_keys$`Secret access key`
 my_bucket_name <- "ui-lodes-job-change-public" 
 
 
+Sys.setenv("AWS_ACCESS_KEY_ID" = key,
+           "AWS_SECRET_ACCESS_KEY" = secret_key,
+           "AWS_DEFAULT_REGION" = "us-east-1")
+
 #set keys for the bucket
 get_bucket(
   bucket = my_bucket_name,
@@ -20,18 +24,11 @@ get_bucket(
   secret = secret_key
 )
 
-#put geojson file in bucket directory
-put_object(file = "data/processed-data/job_loss_by_tract.geojson", 
-           object = "job_loss_by_tract.geojson",
-           bucket = my_bucket_name,
-           multipart = T)
 
-#put cbsa csv in bucket directory
-put_object("data/processed-data/cbsa_job_loss.csv", 
-           "cbsa_job_loss.csv",
-           my_bucket)
+#upload all files in s3_final directory while maintaining folders
+s3sync(files = dir("data/processed-data/s3_final", recursive = T), 
+       bucket = my_bucket_name,
+       direction = "upload")
 
-#put county csv in bucket directory
-put_object("data/processed-data/county_job_loss.csv", 
-           "county_job_loss.csv",
-           my_bucket)
+
+

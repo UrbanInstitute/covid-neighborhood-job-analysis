@@ -1,6 +1,6 @@
 #Creates the geographic Census tract-level files, 
-#which contain the simplified geometries of Census tracts at the metro area,
-#county, and city and town level.
+#which contain the simplified geometries of Census tracts at the metro area and county level
+
 library(tidyverse)
 library(urbnmapr)
 library(sf)

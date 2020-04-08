@@ -207,7 +207,7 @@ sum(is.na(job_loss_wide_sf_1$job_loss_index))
 #i don't have a solution for this, just flagging
 
 
-geo_file_name <- "data/processed-data/job_loss_by_tract.geojson"
+geo_file_name <- "data/processed-data/s3_final/job_loss_by_tract.geojson"
 
 
 if(file.exists(geo_file_name)){
@@ -216,6 +216,63 @@ if(file.exists(geo_file_name)){
 
 #write out data
 st_write(job_loss_wide_sf_1, geo_file_name)
+
+#create directories for smaller geojson writeouts
+if(!dir.exists("data/processed-data/s3_final/county")){
+  dir.create("data/processed-data/s3_final/county")
+}
+
+if(!dir.exists("data/processed-data/s3_final/cbsa")){
+  dir.create("data/processed-data/s3_final/cbsa")
+}
+
+
+#write out geojson in smaller files. takes in three arguments: 
+#geo - either "county" or "cbsa"
+#code - the fips code of the geography
+#var_name - the name of the variable storing the fips code
+write_smaller_geojson <- function(geo, code, var_name){
+
+#get file name of file to write out    
+file_name <- paste0("data/processed-data/s3_final/", 
+         geo, 
+         "/", 
+         code, 
+         ".geojson")
+
+#remove file if it exists already
+if(file.exists(file_name)){
+ file.remove(file_name) 
+}
+
+#filter to just the geography we want and write out the file to geojson
+  job_loss_wide_sf_1 %>%
+    filter({{var_name}} == code) %>%
+    st_write(file_name)
+
+}
+
+#write out file to county geographies
+job_loss_wide_sf_1 %>% 
+  pull(county_fips) %>% 
+  unique() %>% 
+  walk(~write_smaller_geojson(geo = "county", 
+                              code = ., 
+                              var_name = county_fips))
+
+#write out file to cbsa geographies
+job_loss_wide_sf_1 %>% 
+  filter(!is.na(cbsa)) %>%
+  pull(cbsa) %>% 
+  unique() %>% 
+  walk(~write_smaller_geojson(geo = "cbsa", 
+                              code = ., 
+                              var_name = cbsa))
+
+
+
+
+
 
 
 
@@ -349,28 +406,28 @@ create_bbox <- function(my_fips, geo){
 
 #get unique counties
 my_county_fips <- job_loss_wide_sf_1 %>% 
+  filter(!is.na(county_fips)) %>%
   pull(county_fips) %>% 
   unique()
 
 #get unique cbsas
 my_cbsas <- job_loss_wide_sf_1 %>% 
+  filter(!is.na(cbsa)) %>%
   pull(cbsa) %>% 
   unique()
 
-#remove na values in cbsas
-my_cbsas_r <- my_cbsas[!is.na(my_cbsas)]
 
 #get all county bboxes
 #note: these take some time. any thoughts on how to make faster?
 county_bbox<-my_county_fips %>%
-  map_df(~create_bbox(., "county_fips")) %>% 
+  map_df(~create_bbox(., county_fips)) %>% 
   cbind(my_county_fips, .)
 
 #get all cbsa bboxes
 #note: these take some time. any thoughts on how to make faster? 
-cbsa_bbox <- my_cbsas_r %>% 
-  map_df(~create_bbox(., "cbsa")) %>% 
-  cbind(my_cbsas_r,  .)
+cbsa_bbox <- my_cbsas %>% 
+  map_df(~create_bbox(., cbsa)) %>% 
+  cbind(my_cbsas,  .)
 
 #join together bbox data and county job loss data, and reorder
 county_final <- left_join(county_bbox %>% rename(county_fips = my_county_fips), 
@@ -379,9 +436,9 @@ county_final <- left_join(county_bbox %>% rename(county_fips = my_county_fips),
   select(county_fips, county_name, everything())
 
 #join together bbox data and cbsa job loss data, and reorder
-cbsa_final <- left_join(cbsa_bbox %>% rename(cbsa = my_cbsas_r), cbsa_job_loss, by= "cbsa")%>% 
+cbsa_final <- left_join(cbsa_bbox %>% rename(cbsa = my_cbsas), cbsa_job_loss, by= "cbsa")%>% 
   select(cbsa, cbsa_name, everything())
 
 #write out final data with bounding boxes
-write_csv(county_final, "data/processed-data/county_job_loss.csv")
-write_csv(cbsa_final, "data/processed-data/cbsa_job_loss.csv")
+write_csv(county_final, "data/processed-data/s3_final/county_job_loss.csv")
+write_csv(cbsa_final, "data/processed-data/s3_final/cbsa_job_loss.csv")
