@@ -254,6 +254,7 @@ if(file.exists(file_name)){
 
 #write out file to county geographies
 job_loss_wide_sf_1 %>% 
+  filter(!is.na(county_fips)) %>%
   pull(county_fips) %>% 
   unique() %>% 
   walk(~write_smaller_geojson(geo = "county", 
@@ -308,9 +309,6 @@ job_loss_index_all <- job_loss_by_industry_all %>%
   summarise(job_loss_index = sum(job_loss_in_industry)) %>% 
   #ungroup data
   ungroup()
-
-
-
 
 
 
