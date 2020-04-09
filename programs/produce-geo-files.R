@@ -4,6 +4,10 @@
 library(tidyverse)
 library(urbnmapr)
 library(sf)
+library(tigris)
+
+options(use_tigris_cache = T, 
+        tigris_class = "sf")
 
 #assign path of xwalk data
 path <- "data/raw-data/small/"
@@ -77,8 +81,11 @@ write_csv(trct_cty_cbsa,
 #get spatial counties
 my_counties <- get_urbn_map(map = "counties", sf = T)
 
-#get states in order to join on final data. Remove geographies
-my_states <- get_urbn_map(map = "states", sf = T) %>% 
+#get states in order to join on final data. 
+my_states_sf <- get_urbn_map(map = "states", sf = T) 
+
+#Remove geometries
+my_states <- my_states_sf %>% 
   st_drop_geometry()
 
 #keep just south dakota
@@ -148,4 +155,16 @@ my_tracts<-tract_files %>%
 
 #write out to geojson
 st_write(my_tracts, "data/processed-data/tracts.geojson")
+
+
+
+#get cbsa spatial file for use on s3
+
+my_cbsas<-core_based_statistical_areas(cb = T)
+
+
+#write out geographies for use on s3 
+st_write(my_cbsas, "data/processed-data/s3_final/counties.geojson")
+st_write(my_counties, "data/processed-data/s3_final/counties.geojson")
+st_write(my_states_sf, "data/processed-data/s3_final/states.geojson")
 

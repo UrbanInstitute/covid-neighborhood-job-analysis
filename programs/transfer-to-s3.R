@@ -17,18 +17,47 @@ Sys.setenv("AWS_ACCESS_KEY_ID" = key,
            "AWS_SECRET_ACCESS_KEY" = secret_key,
            "AWS_DEFAULT_REGION" = "us-east-1")
 
-#set keys for the bucket
-get_bucket(
-  bucket = my_bucket_name,
-  key = key,
-  secret = secret_key
-)
+
+s3_filepath <- "data/processed-data/s3_final/"
+
+#put geojson file in bucket directory
+put_object(file = paste0(s3_filepath, "job_loss_by_tract.geojson"), 
+           object = "job_loss_by_tract.geojson",
+           bucket = my_bucket_name,
+           multipart = T)
+
+#put cbsa csv in bucket directory
+put_object( paste0(s3_filepath, "cbsa_job_loss.csv"), 
+           "cbsa_job_loss.csv",
+           my_bucket_name)
+
+#put county csv in bucket directory
+put_object(paste0(s3_filepath, "county_job_loss.csv"), 
+           "county_job_loss.csv",
+           my_bucket_name)
+
+#list files in county directory 
+county_files <- list.files(paste0(s3_filepath, "county"))
+
+#put all files in county directory on s3
+county_files %>% 
+  walk(~put_object(file = paste0(s3_filepath, "county/", .), 
+                   object = paste0("county/", .), 
+                   bucket = my_bucket_name))
+
+#list files in county directory 
+cbsa_files <- list.files(paste0(s3_filepath, "cbsa"))
+
+#one file not uploading, will do manually
+cbsa_files_minus <- cbsa_files[cbsa_files != "31940.geojson"]
 
 
-#upload all files in s3_final directory while maintaining folders
-s3sync(files = dir("data/processed-data/s3_final", recursive = T), 
-       bucket = my_bucket_name,
-       direction = "upload")
+#put all files in county directory on s3
+cbsa_files_minus %>% 
+  walk(~put_object(file = paste0(s3_filepath, "cbsa/", .), 
+                   object = paste0("cbsa/", .), 
+                   bucket = my_bucket_name))
+
 
 
 

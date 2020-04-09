@@ -81,3 +81,5 @@ job_change_led %>%
     str_glue("data/processed-data/job_change_bls_{start_year}_{start_month}_to_{latest_year}_{latest_month}.csv")
   )
                   
+job_change_led %>% 
+  write_csv("data/processed-data/job_change_bls_most_recent.csv")

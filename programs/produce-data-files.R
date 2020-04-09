@@ -99,31 +99,31 @@ prep_employment_join <- function(df){
 
 if(dataset == "wa"){
   
- job_loss_estimates <- read_csv("data/processed-data/job_change_wa_last_3_weeks.csv") %>% 
+ job_loss_estimates <- read_csv("data/processed-data/job_change_wa_most_recent.csv") %>% 
    prep_employment_join()
   
 } else if(dataset == "bls"){
-  #get most recent ces file to join to lodes data
+  #get most recent ces file to join to lodes data - deprecated, now just read in most recent file
   
-  #get files in processed data directory
-  processed_files<-list.files("data/processed-data") 
-  
-  #get just ces files, and create variable that has the last month as designated in the file 
-  ces_files<-processed_files[processed_files %>% 
-                               startsWith("job_change_bls")] %>% 
-    data.frame(files = .) %>% 
-    mutate(last_month = substr(files, str_length(files) - 5, str_length(files) - 3) %>% 
-             str_remove("_") %>% 
-             as.numeric())
-  
-  #keep just the last file, and set file name of most recent file
-  most_recent_file <- ces_files %>% 
-    filter(last_month == max(last_month)) %>% 
-    pull(files) %>% 
-    as.character()
+  # #get files in processed data directory
+  # processed_files<-list.files("data/processed-data") 
+  # 
+  # #get just ces files, and create variable that has the last month as designated in the file 
+  # ces_files<-processed_files[processed_files %>% 
+  #                              startsWith("job_change_bls")] %>% 
+  #   data.frame(files = .) %>% 
+  #   mutate(last_month = substr(files, str_length(files) - 5, str_length(files) - 3) %>% 
+  #            str_remove("_") %>% 
+  #            as.numeric())
+  # 
+  # #keep just the last file, and set file name of most recent file
+  # most_recent_file <- ces_files %>% 
+  #   filter(last_month == max(last_month)) %>% 
+  #   pull(files) %>% 
+  #   as.character()
   
   #read in most recent file and prepare for join
-  job_loss_estimates <- read_csv(paste0("data/processed-data/", most_recent_file)) %>% 
+  job_loss_estimates <- read_csv("data/processed-data/job_change_bls_most_recent.csv") %>% 
     prep_employment_join()
     
   

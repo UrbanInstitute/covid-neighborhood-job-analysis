@@ -75,4 +75,5 @@ percent_change_industry <- qcew_led %>%
                             mutate(percent_change_employment = -unemployment_totals / total_employment) %>%
                             arrange(lodes_var) %>%
                             write_csv(str_glue("data/processed-data/job_change_wa_last_{past_unemployment_weeks}_weeks.csv"))
-
+percent_change_industry %>% 
+  write_csv("data/processed-data/job_change_wa_most_recent.csv")
