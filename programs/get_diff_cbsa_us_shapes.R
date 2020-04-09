@@ -23,17 +23,20 @@ us = us %>% st_transform(2163)
 # in the cbsa file, proably due to different resolution sizes
 diff = st_difference(cbsa, us)
 
+# So we clip those tiny boundaries off of the US shapefile
 us1 = st_difference(us, diff)
 
-# So we clip those tiny boundaries off of the US shapefile
-us_int = st_intersection(us, diff)
+# And then find the parts of the US that are not covered by our CBSA map
+diff_us = st_difference(us_int, cbsa)
+non_overlapping_us = diff_us %>% st_union()
 
-
-diff2 = st_difference(us, cbsa)
+# us_int = st_intersection(us %>% st_set_precision(1e5), diff %>% st_set_precision(1e5))
+# 
+# 
+# diff2 = st_difference(us %>% st_set_precision(1e5), cbsa %>% st_set_precision(1e5))
+# 
+# diff_us = st_difference(us_int, cbsa)
+# diff_us2 = st_difference(us, cbsa)
 
 diff_us = st_difference(us_int, cbsa)
-
-us = st_intersection(us, diff)
-mapview(diff)
-
 
