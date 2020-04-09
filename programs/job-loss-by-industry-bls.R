@@ -18,7 +18,6 @@ ces_all <- read_tsv("data/raw-data/big/ces_all.txt")
 # Specify only the series we are interested in:
 # CES (seasonally adjusted) + {industry code from crosswalk} + 
 # 01 (All employees, thousands)
-series_template <- "CES{industry_code}01"
 construct_ces_list <- function(industry_code){
   str_glue("CES{industry_code}01")
 }
