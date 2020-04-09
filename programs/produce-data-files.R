@@ -74,9 +74,6 @@ lodes_joined <- left_join(lodes_all,
                           lodes_over_40, 
                           by = c("year",
                                  "trct",
-                                 "state_fips",
-                                 "state_abbv",
-                                 "state_name",
                                  "variable"), 
                           suffix = c("_all", "_40")) %>% 
   #subtract income>40k jobs from all jobs 
@@ -176,9 +173,7 @@ job_loss_index <- job_loss_by_industry %>%
 #create job loss by industry wide file
 
 job_loss_wide <- job_loss_by_industry %>% 
-  select(trct, 
-         state_fips,
-         state_name,
+  select(trct,
          county_fips,
          county_name, 
          cbsa,
@@ -316,8 +311,6 @@ job_loss_index_all <- job_loss_by_industry_all %>%
 total_jobs <-filter(full_data_1, 
                     variable == "c000") %>% 
   select(trct, 
-         state_fips,
-         state_name,
          county_fips,
          county_name,
          cbsa,

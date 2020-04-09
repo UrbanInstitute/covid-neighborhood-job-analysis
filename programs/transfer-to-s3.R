@@ -39,8 +39,7 @@ put_object(paste0(s3_filepath, "county_job_loss.csv"),
 #put state geojson in bucket directory
 put_object(paste0(s3_filepath, "states.geojson"), 
            "states.geojson",
-           my_bucket_name,
-           multipart = T)
+           my_bucket_name)
 
 #put cbsa geojson in bucket directory
 put_object(paste0(s3_filepath, "cbsas.geojson"), 
@@ -66,12 +65,9 @@ county_files %>%
 #list files in county directory 
 cbsa_files <- list.files(paste0(s3_filepath, "cbsa"))
 
-#one file not uploading, will do manually
-cbsa_files_minus <- cbsa_files[cbsa_files != "31940.geojson"]
-
 
 #put all files in county directory on s3
-cbsa_files_minus %>% 
+cbsa_files %>% 
   walk(~put_object(file = paste0(s3_filepath, "cbsa/", .), 
                    object = paste0("cbsa/", .), 
                    bucket = my_bucket_name))

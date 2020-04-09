@@ -3,6 +3,11 @@
 # while larger files (>100M) go to data/raw-data/big/
 library(tidyverse)
 library(jsonlite)
+library(tigris)
+
+options(use_tigris_cache = T, 
+        tigris_class = "sf")
+
 
 # Census tract and county geographic files
 # Tracts simplify to 1:500k, Counties to 1:5m
@@ -48,3 +53,33 @@ unlink("data/raw-data/big/2019.q1-q3.by_area", recursive = TRUE)
 # downloaded this to the small folder given its size
 # download.file(url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week 13_2020.xlsx",
 #              destfile = "data/raw-data/big/UI claims week 13_2020.xlsx")
+
+
+
+
+
+#download tigris files for use on s3
+
+#get cbsa spatial files
+my_cbsas<-core_based_statistical_areas(cb = T)
+  
+
+#get county spatial files
+my_counties <- counties(cb = T)
+
+#get state spatial files
+my_states <- states(cb = T) 
+
+clean_and_write_sf <- function(name, filepath) {
+  if(!file.exists(filepath)){
+   name %>% 
+      st_transform(4326) %>%
+      select(GEOID, geometry) %>% 
+      st_write(., filepath)
+  }
+}
+
+#write out geographies for use on s3 
+clean_and_write_sf(my_cbsas,  "data/processed-data/s3_final/cbsas.geojson")
+clean_and_write_sf(my_counties, "data/processed-data/s3_final/counties.geojson")
+clean_and_write_sf(my_states, "data/processed-data/s3_final/states.geojson")

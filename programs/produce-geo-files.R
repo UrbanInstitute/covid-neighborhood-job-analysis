@@ -2,12 +2,8 @@
 #which contain the simplified geometries of Census tracts at the metro area and county level
 
 library(tidyverse)
-library(urbnmapr)
 library(sf)
-library(tigris)
 
-options(use_tigris_cache = T, 
-        tigris_class = "sf")
 
 #assign path of xwalk data
 path <- "data/raw-data/small/"
@@ -78,33 +74,26 @@ write_csv(trct_cty_cbsa,
 # Purpose is WAC is missing for 2017 for south dakota, 
 # which means RAC will be undercounted in surrounding area
 
-#get spatial counties
-my_counties <- get_urbn_map(map = "counties", sf = T) %>% 
-  st_transform(3857)
 
-#get states in order to join on final data. 
-my_states_sf <- get_urbn_map(map = "states", sf = T) %>% 
-  st_transform(3857)
+my_counties <- st_read("data/processed-data/s3_final/counties.geojson") %>% 
+  mutate(state_fips = substr(GEOID, 1, 2))
 
-#Remove geometries
-my_states <- my_states_sf %>% 
-  st_drop_geometry()
+
 
 #keep just south dakota
-south_dakota <- filter(my_counties, state_name == "South Dakota")
+south_dakota <- filter(my_counties, state_fips == "46")
 
 #keep every county except south dakota in order to join
-not_south_dakota <- filter(my_counties, state_name != "South Dakota")
+not_south_dakota <- filter(my_counties, state_fips != "46")
 
 #do join to find counties around south dakota
 around_sd<- st_join( not_south_dakota, 
-                     south_dakota %>%
-                       select(county_fips), 
+                     south_dakota, 
                      suffix = c("_not_sd", "_sd")) %>% 
   #keep only those that succcessfully joined
-  filter(!is.na(county_fips_sd)) %>% 
+  filter(!is.na(GEOID_sd)) %>% 
   #pull the fips that are around sd that joined
-  pull(county_fips_not_sd) %>% 
+  pull(GEOID_not_sd) %>% 
   #get unique fips
   unique()
 
@@ -112,16 +101,11 @@ around_sd<- st_join( not_south_dakota,
 #both south dakota and alaska are missing from wac 2017
 around_sd_df = my_counties %>% 
   st_drop_geometry() %>% 
-  mutate(should_be_2016 = ifelse(state_name %in% c("South Dakota", "Alaska") | county_fips %in% around_sd, 1, 0)) %>% 
-  select(county_fips, should_be_2016) 
-
-#add states to use in final dataset
-around_sd_df_1 <- around_sd_df %>% 
-  mutate(state_fips = substr(county_fips, 1, 2)) %>% 
-  left_join(my_states, by = "state_fips")
+  mutate(should_be_2016 = ifelse(state_fips %in% c("46", "02") | GEOID %in% around_sd, 1, 0)) %>% 
+  select(county_fips = GEOID, should_be_2016) 
 
 #write out data to choose which tracts we need to use 2016 for
-write_csv(around_sd_df_1, "data/processed-data/counties_to_get_2016.csv")
+write_csv(around_sd_df, "data/processed-data/counties_to_get_2016.csv")
 
 #potential code to use when we want to use place
 # tract_to_place <- read_xwalk("geocorr2018_tract10_place14.csv")
@@ -153,21 +137,12 @@ tract_files <- shp_files [str_detect(shp_files, "tract")]
 #read in tract files and append together
 my_tracts<-tract_files %>% 
   map(~st_read(paste0("data/raw-data/big/", .))) %>% 
-  reduce(rbind)
+  reduce(rbind) 
 
 #write out to geojson
-st_write(my_tracts, "data/processed-data/tracts.geojson")
+st_write(my_tracts %>% st_transform(4326), "data/processed-data/tracts.geojson")
 
 
 
-#get cbsa spatial file for use on s3
 
-my_cbsas<-core_based_statistical_areas(cb = T) %>% 
-  st_transform(3857)
-
-
-#write out geographies for use on s3 
-st_write(my_cbsas, "data/processed-data/s3_final/cbsas.geojson")
-st_write(my_counties, "data/processed-data/s3_final/counties.geojson")
-st_write(my_states_sf, "data/processed-data/s3_final/states.geojson")
 
