@@ -433,3 +433,30 @@ cbsa_final <- left_join(cbsa_bbox %>% rename(cbsa = my_cbsas), cbsa_job_loss, by
 #write out final data with bounding boxes
 write_csv(county_final, "data/processed-data/s3_final/county_job_loss.csv")
 write_csv(cbsa_final, "data/processed-data/s3_final/cbsa_job_loss.csv")
+
+
+#get medians (of tract level information) for all variables at the cbsa and county levels
+county_medians <-job_loss_wide_sf_1 %>% 
+  st_drop_geometry() %>% 
+  filter(!is.na(county_fips)) %>%
+  group_by(county_fips) %>% 
+  select(-c(GEOID, 
+            cbsa,
+            county_name, 
+            cbsa_name)) %>%
+  summarise_all(~median(.)) %>% 
+  write_csv("data/processed-data/s3_final/median_job_loss_county.csv")
+
+
+cbsa_medians <-job_loss_wide_sf_1 %>% 
+  st_drop_geometry() %>% 
+  filter(!is.na(cbsa)) %>%
+  group_by(cbsa) %>% 
+  select(-c(GEOID, 
+            county_fips,
+            county_name, 
+            cbsa_name)) %>%
+  summarise_all(~median(.))  %>% 
+  write_csv("data/processed-data/s3_final/median_job_loss_cbsa.csv")
+
+
