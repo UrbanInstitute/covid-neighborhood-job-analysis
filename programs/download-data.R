@@ -83,6 +83,8 @@ clean_and_write_sf <- function(name, filepath) {
   }
 }
 
+dir.create("data/processed-data/s3_final", showWarnings = FALSE)
+
 #write out geographies for use on s3 
 clean_and_write_sf(my_cbsas,  "data/processed-data/s3_final/cbsas.geojson")
 clean_and_write_sf(my_counties, "data/processed-data/s3_final/counties.geojson")

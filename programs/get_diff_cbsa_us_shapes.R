@@ -8,10 +8,9 @@ cbsa = st_read("https://ui-lodes-job-change-public.s3.amazonaws.com/cbsas.geojso
   st_transform(2163)
 
 x = st_read("https://ui-lodes-job-change-public.s3.amazonaws.com/job_loss_by_tract.geojson")
-fips_in_job_change_index = x %>% pull(state_fips) %>% unique() %>% as.character()
+fips_in_job_change_index = x %>% pull(GEOID) %>% substr(1,2) %>% unique()
 
-
-us_states = tigris::states(class = "sf")
+us_states = tigris::states(class = "sf", cb = TRUE)
 us = us_states %>% 
   filter(STATEFP %in% fips_in_job_change_index) %>% 
   st_union() %>% 
