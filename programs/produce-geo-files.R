@@ -79,10 +79,12 @@ write_csv(trct_cty_cbsa,
 # which means RAC will be undercounted in surrounding area
 
 #get spatial counties
-my_counties <- get_urbn_map(map = "counties", sf = T)
+my_counties <- get_urbn_map(map = "counties", sf = T) %>% 
+  st_transform(3857)
 
 #get states in order to join on final data. 
-my_states_sf <- get_urbn_map(map = "states", sf = T) 
+my_states_sf <- get_urbn_map(map = "states", sf = T) %>% 
+  st_transform(3857)
 
 #Remove geometries
 my_states <- my_states_sf %>% 
@@ -160,7 +162,8 @@ st_write(my_tracts, "data/processed-data/tracts.geojson")
 
 #get cbsa spatial file for use on s3
 
-my_cbsas<-core_based_statistical_areas(cb = T)
+my_cbsas<-core_based_statistical_areas(cb = T) %>% 
+  st_transform(3857)
 
 
 #write out geographies for use on s3 
