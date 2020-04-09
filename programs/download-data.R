@@ -12,6 +12,10 @@ options(use_tigris_cache = T,
 # Census tract and county geographic files
 # Tracts simplify to 1:500k, Counties to 1:5m
 # Census tract (2010)
+
+#Create output direcotry to place big raw-data in.
+dir.create("data/raw-data/big", showWarnings = FALSE)
+
 download_by_state <- function(state) {
   download.file(url = str_glue("https://www2.census.gov/geo/tiger/GENZ2018/shp/cb_2018_{state}_tract_500k.zip"),
                 destfile = str_glue("data/raw-data/big/{state}.zip"))

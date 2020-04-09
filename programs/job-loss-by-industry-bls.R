@@ -18,7 +18,6 @@ ces_all <- read_tsv("data/raw-data/big/ces_all.txt")
 # Specify only the series we are interested in:
 # CES (seasonally adjusted) + {industry code from crosswalk} + 
 # 01 (All employees, thousands)
-series_template <- "CES{industry_code}01"
 construct_ces_list <- function(industry_code){
   str_glue("CES{industry_code}01")
 }
@@ -63,8 +62,9 @@ ces_series_reference <- join_prep(ces_series_reference, "reference")
 
 # Join data together and calculate change
 job_change <- ces_series_reference %>%
-               merge(ces_series_latest, by = "series_id", all.x = TRUE) %>%
-               mutate(percent_change_employment = latest / reference - 1)
+              left_join(ces_series_latest, by = "series_id") %>%
+              mutate(percent_change_employment = latest / reference - 1)
+
 
 # Add LED supersector codes
 map_supersector <- function(series_id){

@@ -62,7 +62,9 @@ weekly_unemployment_sub <- weekly_unemployment_sub %>%
 # Then summarize by LODES code
 weekly_unemployment_totals <- weekly_unemployment_sub %>%
                                 data.frame(unemployment = rowSums(weekly_unemployment_sub[1:past_unemployment_weeks])) %>%
-                                select(c((past_unemployment_weeks+1):(past_unemployment_weeks+2))) %>%
+                                select(lodes_var, unemployment) %>%
+                                # AN: Any reasom you're selecting by index rather than by 
+                                # select(c((past_unemployment_weeks+1):(past_unemployment_weeks+2))) %>%
                                 group_by(lodes_var) %>%
                                 summarize(unemployment_totals = sum(unemployment))
 
@@ -71,7 +73,9 @@ weekly_unemployment_totals <- weekly_unemployment_sub %>%
 # Note: assumes no hires, which is not true, but should generally show relative
 # job change in the short term until we get BLS CES data
 percent_change_industry <- qcew_led %>%
-                            merge(weekly_unemployment_totals, by = "lodes_var") %>%
+                            left_join(weekly_unemployment_totals, by = "lodes_var") %>%
+                            select(lodes_var, everything()) %>% 
+                          # merge(weekly_unemployment_totals, by = "lodes_var") %>%
                             mutate(percent_change_employment = -unemployment_totals / total_employment) %>%
                             arrange(lodes_var) %>%
                             write_csv(str_glue("data/processed-data/job_change_wa_last_{past_unemployment_weeks}_weeks.csv"))
