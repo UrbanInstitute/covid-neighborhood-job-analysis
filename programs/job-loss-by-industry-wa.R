@@ -8,7 +8,8 @@ library(readxl)
 # Parameters for start quarter from which to compare job change and
 # The number of past weeks of unemployment data to use
 start_quarter <- 3
-past_unemployment_weeks <- 3
+past_unemployment_weeks <- 4
+filename <- "UI claims week 13_2020.xlsx"
 
 # Read in all CES data
 qcew_all <- read_csv("data/raw-data/big/wa_qcew.csv")
@@ -46,7 +47,7 @@ not_all_na <- function(var){
 add_naics_super_lodes <- function(naics){
   str_glue("CNS",lodes_crosswalk_sector[naics][[1]])
 }
-weekly_unemployment <- read_excel("data/raw-data/small/UI claims week 12_2020.xlsx",
+weekly_unemployment <- read_excel(str_glue("data/raw-data/small/{filename}"),
                                   sheet = "2DigitNAICS_ICs ",
                                   skip = 3)
 weekly_unemployment_sub <- weekly_unemployment %>%
