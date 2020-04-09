@@ -75,16 +75,14 @@ write_csv(trct_cty_cbsa,
 # which means RAC will be undercounted in surrounding area
 
 
-my_counties <- st_read("data/processed-data/s3_final/counties.geojson") %>% 
-  mutate(state_fips = substr(GEOID, 1, 2))
-
+my_counties <- st_read("data/raw-data/big/counties.geojson")
 
 
 #keep just south dakota
-south_dakota <- filter(my_counties, state_fips == "46")
+south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP == "46")
 
 #keep every county except south dakota in order to join
-not_south_dakota <- filter(my_counties, state_fips != "46")
+not_south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP!= "46")
 
 #do join to find counties around south dakota
 around_sd<- st_join( not_south_dakota, 
@@ -101,7 +99,7 @@ around_sd<- st_join( not_south_dakota,
 #both south dakota and alaska are missing from wac 2017
 around_sd_df = my_counties %>% 
   st_drop_geometry() %>% 
-  mutate(should_be_2016 = ifelse(state_fips %in% c("46", "02") | GEOID %in% around_sd, 1, 0)) %>% 
+  mutate(should_be_2016 = ifelse(STATEFP %in% c("46", "02") | GEOID %in% around_sd, 1, 0)) %>% 
   select(county_fips = GEOID, should_be_2016) 
 
 #write out data to choose which tracts we need to use 2016 for
@@ -141,8 +139,6 @@ my_tracts<-tract_files %>%
 
 #write out to geojson
 st_write(my_tracts %>% st_transform(4326), "data/processed-data/tracts.geojson")
-
-
 
 
 

@@ -178,10 +178,11 @@ job_loss_wide <- job_loss_by_industry %>%
          county_name, 
          cbsa,
          cbsa_name,
-         lehd_name, 
+         variable,
          job_loss_in_industry) %>% 
-  pivot_wider(names_from = lehd_name, values_from = job_loss_in_industry) %>% 
-  left_join(job_loss_index, by = "trct")
+  pivot_wider(names_from = variable, values_from = job_loss_in_industry) %>% 
+  left_join(job_loss_index, by = "trct") %>% 
+  rename(index = job_loss_index)
 
 
 #read in tract geography
@@ -201,16 +202,34 @@ sum(is.na(job_loss_wide_sf_1$job_loss_index))
 
 #i don't have a solution for this, just flagging
 
+#round jobs by industry at the .1 level, full index at the integer level
+job_loss_wide_sf_2 <- job_loss_wide_sf_1 %>% 
+  mutate_at(.vars = vars(starts_with("cns")), ~round(., digits = 1)) %>% 
+  mutate(index = round(index)) 
 
 geo_file_name <- "data/processed-data/s3_final/job_loss_by_tract.geojson"
 
+
+#remove geojson file and write out
+remove_and_write <- function(sf_data, geo_file_name){
 
 if(file.exists(geo_file_name)){
   file.remove(geo_file_name)
 }
 
 #write out data
-st_write(job_loss_wide_sf_1, geo_file_name)
+sf_data %>%
+st_write(geo_file_name)
+
+}
+
+#remove extreaneous variables
+job_loss_wide_sf_2 %>%
+select(-c(county_fips, 
+          county_name,
+          cbsa,
+          cbsa_name)) %>% 
+  remove_and_write(geo_file_name)
 
 #create directories for smaller geojson writeouts
 if(!dir.exists("data/processed-data/s3_final/county")){
@@ -235,20 +254,19 @@ file_name <- paste0("data/processed-data/s3_final/",
          code, 
          ".geojson")
 
-#remove file if it exists already
-if(file.exists(file_name)){
- file.remove(file_name) 
-}
-
 #filter to just the geography we want and write out the file to geojson
-  job_loss_wide_sf_1 %>%
+  job_loss_wide_sf_2 %>%
     filter({{var_name}} == code) %>%
-    st_write(file_name)
+    select(-c(county_fips, 
+              county_name,
+              cbsa,
+              cbsa_name))%>%
+    remove_and_write(file_name)
 
 }
 
 #write out file to county geographies
-job_loss_wide_sf_1 %>% 
+job_loss_wide_sf_2 %>% 
   filter(!is.na(county_fips)) %>%
   pull(county_fips) %>% 
   unique() %>% 
@@ -257,7 +275,7 @@ job_loss_wide_sf_1 %>%
                               var_name = county_fips))
 
 #write out file to cbsa geographies
-job_loss_wide_sf_1 %>% 
+job_loss_wide_sf_2 %>% 
   filter(!is.na(cbsa)) %>%
   pull(cbsa) %>% 
   unique() %>% 
@@ -434,29 +452,62 @@ cbsa_final <- left_join(cbsa_bbox %>% rename(cbsa = my_cbsas), cbsa_job_loss, by
 write_csv(county_final, "data/processed-data/s3_final/county_job_loss.csv")
 write_csv(cbsa_final, "data/processed-data/s3_final/cbsa_job_loss.csv")
 
+my_states <- st_read("data/raw-data/big/states.geojson") %>% 
+  st_drop_geometry() %>% 
+  transmute(state_fips = GEOID,
+            state_name = NAME)
+
+my_counties <- st_read("data/raw-data/big/counties.geojson") %>% 
+  transmute(county_fips = GEOID,
+            county_name = NAME,
+            state_fips = STATEFP) %>% 
+  left_join(my_states, "state_fips") %>% 
+  select(-state_fips)
+
+my_cbsas <- st_read("data/raw-data/big/cbsas.geojson") %>% 
+  transmute(cbsa =  as.character(GEOID),
+            cbsa_name = NAME)
+
 
 #get medians (of tract level information) for all variables at the cbsa and county levels
-county_medians <-job_loss_wide_sf_1 %>% 
+
+#county
+county_medians <-job_loss_wide_sf_2 %>% 
   st_drop_geometry() %>% 
   filter(!is.na(county_fips)) %>%
   group_by(county_fips) %>% 
   select(-c(GEOID, 
             cbsa,
-            county_name, 
-            cbsa_name)) %>%
+            cbsa_name,
+            county_name)) %>%
   summarise_all(~median(.)) %>% 
-  write_csv("data/processed-data/s3_final/median_job_loss_county.csv")
+  #join to counties
+  right_join(my_counties, by = "county_fips" ) %>% 
+  #reorder
+  select(county_fips, county_name, state_name, everything()) %>% 
+  #keep only rows with data
+  filter(!is.na(index)) 
 
-
-cbsa_medians <-job_loss_wide_sf_1 %>% 
+#cbsa
+cbsa_medians <-job_loss_wide_sf_2 %>% 
   st_drop_geometry() %>% 
   filter(!is.na(cbsa)) %>%
+  mutate(cbsa = as.character(cbsa)) %>%
   group_by(cbsa) %>% 
   select(-c(GEOID, 
             county_fips,
             county_name, 
             cbsa_name)) %>%
   summarise_all(~median(.))  %>% 
-  write_csv("data/processed-data/s3_final/median_job_loss_cbsa.csv")
+  #join to cbsas
+  right_join(my_cbsas, by = "cbsa") %>%
+  #reorder
+  select(cbsa, cbsa_name, everything()) %>%
+  #keep only rows with data
+  filter(!is.na(index)) 
+
+
+remove_and_write(county_medians, "data/processed-data/s3_final/median_job_loss_county.geojson")
+remove_and_write(cbsa_medians, "data/processed-data/s3_final/median_job_loss_cbsa.geojson")
 
 

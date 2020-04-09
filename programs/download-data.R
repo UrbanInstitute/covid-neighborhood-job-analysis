@@ -74,12 +74,11 @@ clean_and_write_sf <- function(name, filepath) {
   if(!file.exists(filepath)){
    name %>% 
       st_transform(4326) %>%
-      select(GEOID, geometry) %>% 
       st_write(., filepath)
   }
 }
 
 #write out geographies for use on s3 
-clean_and_write_sf(my_cbsas,  "data/processed-data/s3_final/cbsas.geojson")
-clean_and_write_sf(my_counties, "data/processed-data/s3_final/counties.geojson")
-clean_and_write_sf(my_states, "data/processed-data/s3_final/states.geojson")
+clean_and_write_sf(my_cbsas,  "data/raw-data/big/cbsas.geojson")
+clean_and_write_sf(my_counties, "data/raw-data/big/counties.geojson")
+clean_and_write_sf(my_states, "data/raw-data/big/states.geojson")

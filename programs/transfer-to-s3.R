@@ -52,13 +52,13 @@ put_object(paste0(s3_filepath, "counties.geojson"),
            my_bucket_name, 
            multipart = T)
 
-#put median county summaries csv in bucket directory
-put_object(paste0(s3_filepath, "median_job_loss_county.csv"),
-           "median_job_loss_county.csv",
+#put median county summaries geojson in bucket directory
+put_object(paste0(s3_filepath, "median_job_loss_county.geojson"),
+           "median_job_loss_county.geojson",
            my_bucket_name)
 
-#put median cbsa summaries csv in bucket directory
-put_object(paste0(s3_filepath, "median_job_loss_cbsa.csv"),
+#put median cbsa summaries geojson in bucket directory
+put_object(paste0(s3_filepath, "median_job_loss_cbsa.geojson"),
            "median_job_loss_cbsa.csv",
            my_bucket_name)
 
