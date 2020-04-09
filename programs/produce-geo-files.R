@@ -164,7 +164,7 @@ my_cbsas<-core_based_statistical_areas(cb = T)
 
 
 #write out geographies for use on s3 
-st_write(my_cbsas, "data/processed-data/s3_final/counties.geojson")
+st_write(my_cbsas, "data/processed-data/s3_final/cbsas.geojson")
 st_write(my_counties, "data/processed-data/s3_final/counties.geojson")
 st_write(my_states_sf, "data/processed-data/s3_final/states.geojson")
 
