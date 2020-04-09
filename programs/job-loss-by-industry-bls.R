@@ -62,8 +62,9 @@ ces_series_reference <- join_prep(ces_series_reference, "reference")
 
 # Join data together and calculate change
 job_change <- ces_series_reference %>%
-               merge(ces_series_latest, by = "series_id", all.x = TRUE) %>%
-               mutate(percent_change_employment = latest / reference - 1)
+              left_join(ces_series_latest, by = "series_id") %>%
+              mutate(percent_change_employment = latest / reference - 1)
+
 
 # Add LED supersector codes
 map_supersector <- function(series_id){
