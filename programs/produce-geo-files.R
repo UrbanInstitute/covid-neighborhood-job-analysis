@@ -5,84 +5,7 @@ library(tidyverse)
 library(sf)
 library(jsonlite)
 
-#assign path of xwalk data
-path <- "data/raw-data/small/"
 
-start_month <- 2
-start_year <- 2020
-
-#read in xwalk data
-read_xwalk <- function(filename){
-  read_csv(paste0(path, filename),
-    #skip first line
-    skip = 1
-  ) 
-}
-#create clean tract id for xwalk data
-clean_xwalk <- function(df){
- df %>% 
-    mutate(tract = str_remove(Tract, "\\."),
-           trct = paste0(`County code`, tract))
-}
-
-
-#read in tract to cbsa file. should have allocation factor of 1 as tracts should be nested in counties which are nested in cbsas
-tract_to_cbsa <- read_xwalk("geocorr2018_tract10_cbsa15.csv")
-tract_to_cbsa_c <- clean_xwalk(tract_to_cbsa)
-
-#check if allocation factor of 1 
-cbsa_check<-tract_to_cbsa_c %>% 
-  pull(`tract to cbsa allocation factor`) %>% 
-  unique()!=1 
-
-if(any(cbsa_check )){
-     stop("tracts are not showing as nested within cbsas")
-   }
-
-#read in tract to county file. should have allocation factor of 1 as tracts should be nested within counties
-tract_to_county <- read_xwalk("geocorr2018_tract10_county14.csv")
-tract_to_county_c <- clean_xwalk(tract_to_county)
-
-#check if allocation factor of 1
-county_check<-tract_to_county_c %>% 
-  pull(`tract to county14 allocation factor`) %>% 
-  unique()!=1 
-
-if(any(county_check )){
-  stop("tracts are not showing as nested within counties")
-}
-
-
-#select only variables we need from tract to county and tract to cbsa and merge. 
-#Note, merge actually not needed as tract to cbsa has county on there. 
-trct_cty_cbsa<-tract_to_county_c %>% 
-  select(trct,
-         county_fips = `County code (2014)`,
-         county_name = `County name`) %>% 
-  left_join(tract_to_cbsa_c %>% 
-              select(trct, 
-                     cbsa = `CBSA (current)`,
-                     cbsa_name = `2015 CBSA name`), 
-            by = "trct")
-
-#write out tract/county/cbsa crosswalk 
-write_csv(trct_cty_cbsa, 
-          "data/processed-data/tract_county_cbsa_xwalk.csv")
-
-#Write out CbsaToCounty and CountyToCbsa JSONS
-county_to_cbsa = trct_cty_cbsa %>% 
-  group_by(county_fips) %>% 
-  summarize(cbsas = list(unique(cbsa)))  %>% 
-  pivot_wider(names_from = county_fips, values_from = cbsas)
-
-cbsa_to_county = trct_cty_cbsa %>% 
-  group_by(cbsa) %>% 
-  summarize(counties = list(unique(county_fips))) %>% 
-  pivot_wider(names_from = cbsa, values_from = counties)
-
-
-jsonlite::write_json(cbsa_to_county, 'data/processed-data/cbsaToCounty2.json')
-jsonlite::write_json(county_to_cbsa, 'data/processed-data/CountyToCbsa2.json')
 
 
 # Get counties around south dakota
@@ -121,6 +44,8 @@ around_sd_df = my_counties %>%
 #write out data to choose which tracts we need to use 2016 for
 write_csv(around_sd_df, "data/processed-data/counties_to_get_2016.csv")
 
+
+#---------
 #potential code to use when we want to use place
 # tract_to_place <- read_xwalk("geocorr2018_tract10_place14.csv")
 # tract_to_place_c <- clean_xwalk(tract_to_place) 
@@ -139,6 +64,8 @@ write_csv(around_sd_df, "data/processed-data/counties_to_get_2016.csv")
 #          afact) %>% 
 #   distinct()
 
+
+#----------
 #read in tract files
 
 #get filenames in directory
@@ -151,10 +78,56 @@ tract_files <- shp_files [str_detect(shp_files, "tract")]
 #read in tract files and append together
 my_tracts<-tract_files %>% 
   map(~st_read(paste0("data/raw-data/big/", .))) %>% 
-  reduce(rbind) 
+  reduce(rbind) %>% 
+  st_transform(4326)
 
 #write out to geojson
-st_write(my_tracts %>% st_transform(4326), "data/processed-data/tracts.geojson", delete_dsn = TRUE)
+st_write(my_tracts, "data/processed-data/tracts.geojson", delete_dsn = TRUE)
 
 
+#---------
+#create cbsa tract crosswalk using spatial methods
+
+#read in cbsa shapefile
+my_cbsas<- st_read("data/raw-data/big/cbsas.geojson") %>% 
+  select(cbsa_fips = GEOID, cbsa_name = NAME)
+
+#join tract shapefile with cbsa shapefile
+joined_cbsa<- st_join(my_tracts %>% select(GEOID), my_cbsas, join = st_covered_by)
+
+#tracts are not in multiple cbsas
+joined_cbsa$GEOID %>% 
+  unique() %>%
+  length() == nrow(joined_cbsa)
+
+
+
+#create crosswalk
+trct_cty_cbsa <- joined_cbsa %>% 
+  #drop geometry
+  st_drop_geometry() %>% 
+  #add county fips
+  mutate(county_fips = substr(GEOID, 1, 5)) %>% 
+  #join with county for county names
+  left_join(my_counties, by = c("county_fips" = "GEOID")) %>%
+  #select/order wanted variables
+  select(GEOID, county_fips, county_name = NAME, cbsa = cbsa_fips, cbsa_name)
+
+write_csv(trct_cty_cbsa, "data/processed-data/tract_county_cbsa_xwalk.csv")
+
+#-----------  
+#Write out CbsaToCounty and CountyToCbsa JSONS
+county_to_cbsa = trct_cty_cbsa %>% 
+  group_by(county_fips) %>% 
+  summarize(cbsas = list(unique(cbsa)))  %>% 
+  pivot_wider(names_from = county_fips, values_from = cbsas)
+
+cbsa_to_county = trct_cty_cbsa %>% 
+  group_by(cbsa) %>% 
+  summarize(counties = list(unique(county_fips))) %>% 
+  pivot_wider(names_from = cbsa, values_from = counties)
+
+
+jsonlite::write_json(cbsa_to_county, 'data/processed-data/cbsaToCounty2.json')
+jsonlite::write_json(county_to_cbsa, 'data/processed-data/CountyToCbsa2.json')
 

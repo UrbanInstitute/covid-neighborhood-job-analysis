@@ -142,7 +142,7 @@ full_data <- left_join(lodes_joined,
                        job_loss_estimates, 
                        by = c("variable" = "lodes_var")) %>% 
              left_join(lehd_types, by = c("variable" = "lehd_var")) %>%
-             left_join(trct_cty_cbsa_xwalk, by = "trct") 
+             left_join(trct_cty_cbsa_xwalk, by = c("trct" = "GEOID")) 
 
 #trct_cty_cbsa_xwalk is missing some county_fips - 
 #note actually much less than this, as data long by variable
@@ -178,11 +178,11 @@ job_loss_wide <- job_loss_by_industry %>%
          county_name, 
          cbsa,
          cbsa_name,
-         ind_var = str_remove(variable, "cns"),
+         ind_var = paste0("X", str_remove(variable, "cns")),
          job_loss_in_industry) %>% 
   pivot_wider(names_from = ind_var, values_from = job_loss_in_industry) %>% 
   left_join(job_loss_index, by = "trct") %>% 
-  rename(index = job_loss_index)
+  rename(X000 = job_loss_index)
 
 #AN: Why are the below 2 lines different? Looks like geocorr is just missing some tracts
 # trct_cty_cbsa_xwalk %>% nrow() #Crosswalk from Mable has 72,531 tracts
@@ -228,22 +228,22 @@ job_loss_wide_sf_1 <- job_loss_wide_sf %>%
 
 
 #check how many tracts are in spatial data but not our data
-sum(is.na(job_loss_wide_sf_1$index))
+sum(is.na(job_loss_wide_sf_1$X000))
 
 #filter out water tracts 
 job_loss_wide_sf_2<- filter(job_loss_wide_sf_1, substr(GEOID, 6, 7) != "99")
 
 #check how many tracts are in spatial data but not our data
-sum(is.na(job_loss_wide_sf_2$index))
+sum(is.na(job_loss_wide_sf_2$X000))
 
-#not sure what's going on in this tract 
+#not sure what's going on in this tract, but has a population of only 62. 
 
 
 #round jobs by industry at the .1 level, full index at the integer level
 job_loss_wide_sf_3 <- job_loss_wide_sf_2 %>% 
-  mutate_at(.vars = vars("01":"20"), ~round(., digits = 1)) %>% 
-  mutate(index = round(index)) %>% 
-  filter(!is.na(index))
+  mutate_at(.vars = vars(X01:X20), ~round(., digits = 1)) %>% 
+  mutate(X000 = round(X000)) %>% 
+  filter(!is.na(X000))
 
 geo_file_name <- "data/processed-data/s3_final/job_loss_by_tract.geojson"
 
@@ -323,11 +323,6 @@ job_loss_wide_sf_3 %>%
 
 
 
-
-
-
-
-
 #Total data (not just under 40k)
 #join lodes data with most recent job loss data,
 #with industry names dataframe, and with the geographic xwalk
@@ -335,7 +330,7 @@ full_data_all <- left_join(lodes_all,
                        job_loss_estimates, 
                        by = c("variable" = "lodes_var")) %>% 
   left_join(lehd_types, by = c("variable" = "lehd_var")) %>%
-  left_join(trct_cty_cbsa_xwalk, by = "trct") 
+  left_join(trct_cty_cbsa_xwalk, by = c("trct" = "GEOID")) 
 
 #trct_cty_cbsa_xwalk is missing some county_fips - 
 #note actually much less than this, as data long by variable
@@ -524,7 +519,10 @@ county_medians <-job_loss_wide_sf_3 %>%
   #reorder
   select(county_fips, county_name, state_name, everything()) %>% 
   #keep only rows with data
-  filter(!is.na(index)) 
+  filter(!is.na(X000)) 
+
+
+
 
 #cbsa
 cbsa_medians <-job_loss_wide_sf_3 %>% 
@@ -542,10 +540,33 @@ cbsa_medians <-job_loss_wide_sf_3 %>%
   #reorder
   select(cbsa, cbsa_name, everything()) %>%
   #keep only rows with data
-  filter(!is.na(index)) 
+  filter(!is.na(X000)) 
 
 
 remove_and_write(county_medians, "data/processed-data/s3_final/median_job_loss_county.geojson")
 remove_and_write(cbsa_medians, "data/processed-data/s3_final/median_job_loss_cbsa.geojson")
 
+#write to csv
+county_medians %>% 
+  select(-geometry) %>%
+write_csv("data/processed-data/s3_final/median_job_loss_county.csv") 
+
+#write to csv
+cbsa_medians %>% 
+  select(-geometry) %>%
+  write_csv("data/processed-data/s3_final/median_job_loss_cbsa.csv") 
+
+#get us medians and write out
+us_medians <- job_loss_wide_sf_3 %>% 
+  st_drop_geometry() %>% 
+  select(-c(GEOID, 
+            county_fips,
+            county_name, 
+            cbsa,
+            cbsa_name)) %>%
+  summarise_all(~median(.)) %>% 
+  mutate(GEOID = "99") %>%
+  select(GEOID, everything()) %>% 
+  write_csv("data/processed-data/s3_final/median_job_loss_us.csv")
+  
 

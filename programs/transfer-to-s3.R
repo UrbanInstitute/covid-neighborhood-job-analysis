@@ -59,9 +59,19 @@ put_object(paste0(s3_filepath, "median_job_loss_county.geojson"),
 
 #put median cbsa summaries geojson in bucket directory
 put_object(paste0(s3_filepath, "median_job_loss_cbsa.geojson"),
-           "median_job_loss_cbsa.csv",
+           "median_job_loss_cbsa.geojson",
            my_bucket_name)
 
+
+#put median county summaries csv in bucket directory
+put_object(paste0(s3_filepath, "median_job_loss_county.csv"),
+           "median_job_loss_county.csv",
+           my_bucket_name)
+
+#put median cbsa summaries csv in bucket directory
+put_object(paste0(s3_filepath, "median_job_loss_cbsa.csv"),
+           "median_job_loss_cbsa.csv",
+           my_bucket_name)
 
 #list files in county directory 
 county_files <- list.files(paste0(s3_filepath, "county"))
@@ -82,7 +92,13 @@ cbsa_files %>%
                    object = paste0("cbsa/", .), 
                    bucket = my_bucket_name))
 
+#put lehd_types.csv on s3
+put_object("data/raw-data/small/lehd_types_s3.csv",
+           "lehd_types_s3.csv",
+           my_bucket_name)
 
-
+put_object(file = paste0(s3_filepath, "median_job_loss_us.csv"),
+           "median_job_loss_us.csv",
+           my_bucket_name)
 
 
