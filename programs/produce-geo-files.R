@@ -3,7 +3,7 @@
 
 library(tidyverse)
 library(sf)
-
+library(jsonlite)
 
 #assign path of xwalk data
 path <- "data/raw-data/small/"
@@ -68,6 +68,21 @@ trct_cty_cbsa<-tract_to_county_c %>%
 #write out tract/county/cbsa crosswalk 
 write_csv(trct_cty_cbsa, 
           "data/processed-data/tract_county_cbsa_xwalk.csv")
+
+#Write out CbsaToCounty and CountyToCbsa JSONS
+county_to_cbsa = trct_cty_cbsa %>% 
+  group_by(county_fips) %>% 
+  summarize(cbsas = list(unique(cbsa)))  %>% 
+  pivot_wider(names_from = county_fips, values_from = cbsas)
+
+cbsa_to_county = trct_cty_cbsa %>% 
+  group_by(cbsa) %>% 
+  summarize(counties = list(unique(county_fips))) %>% 
+  pivot_wider(names_from = cbsa, values_from = counties)
+
+
+jsonlite::write_json(cbsa_to_county, 'data/processed-data/cbsaToCounty2.json')
+jsonlite::write_json(county_to_cbsa, 'data/processed-data/CountyToCbsa2.json')
 
 
 # Get counties around south dakota
@@ -138,7 +153,7 @@ my_tracts<-tract_files %>%
   reduce(rbind) 
 
 #write out to geojson
-st_write(my_tracts %>% st_transform(4326), "data/processed-data/tracts.geojson")
+st_write(my_tracts %>% st_transform(4326), "data/processed-data/tracts.geojson", delete_dsn = TRUE)
 
 
 
