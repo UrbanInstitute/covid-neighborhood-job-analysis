@@ -173,14 +173,14 @@ job_loss_index <- job_loss_by_industry %>%
 #create job loss by industry wide file
 
 job_loss_wide <- job_loss_by_industry %>% 
-  select(trct,
+  transmute(trct,
          county_fips,
          county_name, 
          cbsa,
          cbsa_name,
-         variable,
+         ind_var = str_remove(variable, "cns"),
          job_loss_in_industry) %>% 
-  pivot_wider(names_from = variable, values_from = job_loss_in_industry) %>% 
+  pivot_wider(names_from = ind_var, values_from = job_loss_in_industry) %>% 
   left_join(job_loss_index, by = "trct") %>% 
   rename(index = job_loss_index)
 
@@ -188,23 +188,30 @@ job_loss_wide <- job_loss_by_industry %>%
 # trct_cty_cbsa_xwalk %>% nrow() #Crosswalk from Mable has 72,531 tracts
 # my_tracts %>% nrow() #Data from Census FTP site has 73,745 tracts
 
-us = fips_codes %>% 
-  filter(!state_code%in% c(74)) %>% 
-  pull(state_code) %>%
-  unique()
+#CD: correct. Ajjit and i discussed, he will look into if this is a problem 
+# Below i flagged 100 tracts in my_tracts that are not in job_loss_wide: 99 are water tracts that are formatted with "XXXXX99XXXX" 
+# see https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2017/TGRSHP2017_TechDoc_Ch3.pdf
+# the only other one is 12086981000, which has a population of 62 people, estimated. I propose we just filter it out
 
-options(use_tigris_cache = FALSE)
-all_tracts <- reduce(
-  map(us, function(x) {
-    tigris::tracts(
-            class = "sf", 
-            state = x,
-            cb = TRUE,
-            year = 2018,
-            refresh = TRUE)
-  }), 
-  rbind
-)
+#CD: below (ajjit's code to download my_tracts from tigris) creates same thing as my_tracts except with some extra territories
+
+# us = fips_codes %>%
+#   filter(!state_code%in% c(74)) %>%
+#   pull(state_code) %>%
+#   unique()
+# 
+# options(use_tigris_cache = FALSE)
+# all_tracts <- reduce(
+#   map(us, function(x) {
+#     tigris::tracts(
+#             class = "sf",
+#             state = x,
+#             cb = TRUE,
+#             year = 2018,
+#             refresh = TRUE)
+#   }),
+#   rbind
+# )
 
 
 #read in tract geography
@@ -219,15 +226,24 @@ job_loss_wide_sf <- left_join(my_tracts %>% select(GEOID),
 job_loss_wide_sf_1 <- job_loss_wide_sf %>%
   filter(!startsWith(GEOID, "72"))
 
-#some tracts are in spatial file that are not in our data
-sum(is.na(job_loss_wide_sf_1$job_loss_index))
 
-#i don't have a solution for this, just flagging
+#check how many tracts are in spatial data but not our data
+sum(is.na(job_loss_wide_sf_1$index))
+
+#filter out water tracts 
+job_loss_wide_sf_2<- filter(job_loss_wide_sf_1, substr(GEOID, 6, 7) != "99")
+
+#check how many tracts are in spatial data but not our data
+sum(is.na(job_loss_wide_sf_2$index))
+
+#not sure what's going on in this tract 
+
 
 #round jobs by industry at the .1 level, full index at the integer level
-job_loss_wide_sf_2 <- job_loss_wide_sf_1 %>% 
-  mutate_at(.vars = vars(starts_with("cns")), ~round(., digits = 1)) %>% 
-  mutate(index = round(index)) 
+job_loss_wide_sf_3 <- job_loss_wide_sf_2 %>% 
+  mutate_at(.vars = vars("01":"20"), ~round(., digits = 1)) %>% 
+  mutate(index = round(index)) %>% 
+  filter(!is.na(index))
 
 geo_file_name <- "data/processed-data/s3_final/job_loss_by_tract.geojson"
 
@@ -246,7 +262,7 @@ st_write(geo_file_name)
 }
 
 #remove extreaneous variables
-job_loss_wide_sf_2 %>%
+job_loss_wide_sf_3 %>%
 select(-c(county_fips, 
           county_name,
           cbsa,
@@ -277,7 +293,7 @@ file_name <- paste0("data/processed-data/s3_final/",
          ".geojson")
 
 #filter to just the geography we want and write out the file to geojson
-  job_loss_wide_sf_2 %>%
+  job_loss_wide_sf_3 %>%
     filter({{var_name}} == code) %>%
     select(-c(county_fips, 
               county_name,
@@ -288,7 +304,7 @@ file_name <- paste0("data/processed-data/s3_final/",
 }
 
 #write out file to county geographies
-job_loss_wide_sf_2 %>% 
+job_loss_wide_sf_3 %>% 
   filter(!is.na(county_fips)) %>%
   pull(county_fips) %>% 
   unique() %>% 
@@ -297,7 +313,7 @@ job_loss_wide_sf_2 %>%
                               var_name = county_fips))
 
 #write out file to cbsa geographies
-job_loss_wide_sf_2 %>% 
+job_loss_wide_sf_3 %>% 
   filter(!is.na(cbsa)) %>%
   pull(cbsa) %>% 
   unique() %>% 
@@ -494,7 +510,7 @@ my_cbsas <- st_read("data/raw-data/big/cbsas.geojson") %>%
 #get medians (of tract level information) for all variables at the cbsa and county levels
 
 #county
-county_medians <-job_loss_wide_sf_2 %>% 
+county_medians <-job_loss_wide_sf_3 %>% 
   st_drop_geometry() %>% 
   filter(!is.na(county_fips)) %>%
   group_by(county_fips) %>% 
@@ -511,7 +527,7 @@ county_medians <-job_loss_wide_sf_2 %>%
   filter(!is.na(index)) 
 
 #cbsa
-cbsa_medians <-job_loss_wide_sf_2 %>% 
+cbsa_medians <-job_loss_wide_sf_3 %>% 
   st_drop_geometry() %>% 
   filter(!is.na(cbsa)) %>%
   mutate(cbsa = as.character(cbsa)) %>%
