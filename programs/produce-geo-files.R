@@ -101,14 +101,15 @@ not_south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP!= "46
 
 #do join to find counties around south dakota
 around_sd<- st_join( not_south_dakota, 
-                     south_dakota, 
+                     south_dakota,
+                     #We want counties outside SD that touch SD
+                     join = st_touches,
+                     left = FALSE,
                      suffix = c("_not_sd", "_sd")) %>% 
-  #keep only those that succcessfully joined
-  filter(!is.na(GEOID_sd)) %>% 
-  #pull the fips that are around sd that joined
+  #Pull unique geoids of counties bordering South Dakota
   pull(GEOID_not_sd) %>% 
-  #get unique fips
   unique()
+
 
 #remove geometry and create variable that is 1 if data is in south dakota or alaska, or around south dakota. 
 #both south dakota and alaska are missing from wac 2017

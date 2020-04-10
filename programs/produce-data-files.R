@@ -184,6 +184,28 @@ job_loss_wide <- job_loss_by_industry %>%
   left_join(job_loss_index, by = "trct") %>% 
   rename(index = job_loss_index)
 
+#AN: Why are the below 2 lines different? Looks like geocorr is just missing some tracts
+# trct_cty_cbsa_xwalk %>% nrow() #Crosswalk from Mable has 72,531 tracts
+# my_tracts %>% nrow() #Data from Census FTP site has 73,745 tracts
+
+us = fips_codes %>% 
+  filter(!state_code%in% c(74)) %>% 
+  pull(state_code) %>%
+  unique()
+
+options(use_tigris_cache = FALSE)
+all_tracts <- reduce(
+  map(us, function(x) {
+    tigris::tracts(
+            class = "sf", 
+            state = x,
+            cb = TRUE,
+            year = 2018,
+            refresh = TRUE)
+  }), 
+  rbind
+)
+
 
 #read in tract geography
 my_tracts <- st_read("data/processed-data/tracts.geojson")

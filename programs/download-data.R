@@ -78,7 +78,7 @@ clean_and_write_sf <- function(name, filepath) {
   if(!file.exists(filepath)){
    name %>% 
       st_transform(4326) %>%
-      st_write(., filepath)
+      st_write(., filepath, delete_dsn = TRUE)
   }
 }
 
