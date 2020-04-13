@@ -254,27 +254,40 @@ job_loss_wide_sf_3 <- job_loss_wide_sf_2 %>%
 
 geo_file_name <- "data/processed-data/s3_final/job_loss_by_tract.geojson"
 
+no_cbsa_geo_file_name <- "data/processed-data/s3_final/no_cbsa_tracts.geojson"
 
 #remove geojson file and write out
 remove_and_write <- function(sf_data, geo_file_name){
-
-if(file.exists(geo_file_name)){
-  file.remove(geo_file_name)
+  
+  if(file.exists(geo_file_name)){
+    file.remove(geo_file_name)
+  }
+  
+  #write out data
+  sf_data %>%
+    st_write(geo_file_name)
+  
 }
 
-#write out data
-sf_data %>%
-st_write(geo_file_name)
-
-}
-
-#remove extreaneous variables
+#remove extreaneous variables and write out
+#   1)job_loss_by_tract.geojson (list of all tracts,
+#     thier cbsa (can be NA) and job loss estimates)
+#   2) no_cbsa_tracts.geojson (list of all tracts 
+#     not contianed in any cbsa)
 job_loss_wide_sf_3 %>%
-select(-c(county_fips, 
-          county_name,
-          cbsa,
-          cbsa_name)) %>% 
+  select(-c(county_fips, 
+            county_name,
+            cbsa,
+            cbsa_name)) %>% 
   remove_and_write(geo_file_name)
+
+job_loss_wide_sf_3 %>%
+  filter(is.na(cbsa)) %>% 
+  select(-c(county_fips, 
+            county_name,
+            cbsa,
+            cbsa_name)) %>% 
+  remove_and_write(no_cbsa_geo_file_name)
 
 #create directories for smaller geojson writeouts
 if(!dir.exists("data/processed-data/s3_final/county")){
