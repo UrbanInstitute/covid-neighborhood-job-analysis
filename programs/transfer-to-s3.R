@@ -40,17 +40,17 @@ put_object(paste0(s3_filepath, "county_job_loss.csv"),
 put_object(paste0(s3_filepath, "states.geojson"), 
            "states.geojson",
            my_bucket_name)
-
-#put cbsa geojson in bucket directory
-put_object(paste0(s3_filepath, "cbsas.geojson"), 
-           "cbsas.geojson",
-           my_bucket_name)
-
-#put county geojson in bucket directory
-put_object(paste0(s3_filepath, "counties.geojson"), 
-           "counties.geojson",
-           my_bucket_name, 
-           multipart = T)
+# 
+# #put cbsa geojson in bucket directory
+# put_object(paste0(s3_filepath, "cbsas.geojson"), 
+#            "cbsas.geojson",
+#            my_bucket_name)
+# 
+# #put county geojson in bucket directory
+# put_object(paste0(s3_filepath, "counties.geojson"), 
+#            "counties.geojson",
+#            my_bucket_name, 
+#            multipart = T)
 
 #put median county summaries geojson in bucket directory
 put_object(paste0(s3_filepath, "median_job_loss_county.geojson"),

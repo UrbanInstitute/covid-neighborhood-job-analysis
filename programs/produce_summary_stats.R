@@ -1,6 +1,7 @@
 library(tidyverse)
 library(sf)
-
+library(urbnthemes)
+set_urbn_defaults()
 
 job_loss <-  st_read("data/processed-data/s3_final/job_loss_by_tract.geojson")
 
@@ -45,3 +46,13 @@ job_loss_long %>%
                       "250+"))) %>%
   count(job_loss_cat)  %>% 
   write_csv("data/processed-data/summary_by_industry.csv")
+
+
+job_loss_long %>%
+  filter(job_loss >= 100) %>% 
+  write_csv("data/processed-data/over_100_by_industry.csv") %>% 
+  ggplot() + 
+  geom_histogram(mapping = aes(job_loss), bins = 1000)
+
+  ggsave(filename = "data/processed-data/job_loss.png")
+

@@ -502,6 +502,28 @@ my_cbsas <- st_read("data/raw-data/big/cbsas.geojson") %>%
             cbsa_name = NAME)
 
 
+
+# create a binned category for the max to use in the county and cbsa zoom-in bar charts. 
+# should be the max value of any industry in the tract inside of the geo, but relatively standardized
+# function takes in a grouped dataframe (by the geography) and finds the max job loss in any industry,
+# setting bins right now at 100, 150, 200, 250, and 600
+add_bins <- function(grouped){
+  grouped %>% 
+    pivot_longer(cols = X01:X20) %>%
+    mutate(max_temp = max(value),
+           max = case_when(
+            max_temp <=100 ~ 100,
+            max_temp >100 & max_temp <= 150 ~ 150,
+            max_temp > 150 & max_temp <= 200 ~ 200,
+            max_temp > 200 & max_temp <= 250 ~ 250,
+            max_temp > 250 & max_temp <= 600 ~ 600
+           )) %>% 
+    select(-max_temp) %>% 
+    pivot_wider(names_from ="name", values_from = "value") %>% 
+    select(-max, everything())
+  
+}
+
 #get medians (of tract level information) for all variables at the cbsa and county levels
 
 #county
@@ -509,10 +531,12 @@ county_medians <-job_loss_wide_sf_3 %>%
   st_drop_geometry() %>% 
   filter(!is.na(county_fips)) %>%
   group_by(county_fips) %>% 
+  add_bins() %>%
   select(-c(GEOID, 
             cbsa,
             cbsa_name,
             county_name)) %>%
+  #note: this calculates the median of `max`` as well, but `max` should all be one unique value anyway
   summarise_all(~median(.)) %>% 
   #join to counties
   right_join(my_counties, by = "county_fips" ) %>% 
@@ -530,6 +554,7 @@ cbsa_medians <-job_loss_wide_sf_3 %>%
   filter(!is.na(cbsa)) %>%
   mutate(cbsa = as.character(cbsa)) %>%
   group_by(cbsa) %>% 
+  add_bins() %>%
   select(-c(GEOID, 
             county_fips,
             county_name, 
