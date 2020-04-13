@@ -2,19 +2,19 @@ library(tidyverse)
 library(sf)
 library(mapview)
 
-job_loss_tracts = st_read("data/processed-data/s3_final/job_loss_by_tract.geojson")
-cbsas = st_read("data/raw-data/big/cbsas.geojson")
+#Run up to line 119 of produce-geo-files.R 
 
 
-tracts_out_of_cbsas = job_loss_tracts %>%
-  filter(is.na(cbsa)) %>% 
+tracts_out_of_cbsas = final_joined_cbsa %>%
+  filter(is.na(cbsa_fips)) %>% 
   st_union() %>% 
   st_sf()
 
-tracts_in_cbsas = job_loss_tracts %>% 
-  filter(!is.na(cbsa)) %>% 
+tracts_in_cbsas <- final_joined_cbsa %>% 
+  filter(!is.na(cbsa_fips)) %>% 
   st_union() %>% 
+  st_sf
 
 mapview(tracts_out_of_cbsas, col.regions = "blue") +
   mapview(tracts_in_cbsas, col.regions = "yellow") +
-  mapview(cbsas, col.regions = "green")
+  mapview(cbsas, col.regions = "red")

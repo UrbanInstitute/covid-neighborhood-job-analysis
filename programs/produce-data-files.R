@@ -277,7 +277,6 @@ remove_and_write <- function(sf_data, geo_file_name){
 job_loss_wide_sf_3 %>%
   select(-c(county_fips, 
             county_name,
-            cbsa,
             cbsa_name)) %>% 
   remove_and_write(geo_file_name)
 
@@ -285,7 +284,6 @@ job_loss_wide_sf_3 %>%
   filter(is.na(cbsa)) %>% 
   select(-c(county_fips, 
             county_name,
-            cbsa,
             cbsa_name)) %>% 
   remove_and_write(no_cbsa_geo_file_name)
 
@@ -317,7 +315,6 @@ file_name <- paste0("data/processed-data/s3_final/",
     filter({{var_name}} == code) %>%
     select(-c(county_fips, 
               county_name,
-              cbsa,
               cbsa_name))%>%
     remove_and_write(file_name)
 
@@ -342,168 +339,168 @@ job_loss_wide_sf_3 %>%
                               var_name = cbsa))
 
 
-
-#Total data (not just under 40k)
-#join lodes data with most recent job loss data,
-#with industry names dataframe, and with the geographic xwalk
-full_data_all <- left_join(lodes_all, 
-                       job_loss_estimates, 
-                       by = c("variable" = "lodes_var")) %>% 
-  left_join(lehd_types, by = c("variable" = "lehd_var")) %>%
-  left_join(trct_cty_cbsa_xwalk, by = c("trct" = "GEOID")) 
-
-#trct_cty_cbsa_xwalk is missing some county_fips - 
-#note actually much less than this, as data long by variable
-sum(is.na(full_data_all$county_fips))
-
-#add correct county_fips 
-full_data_1_all <- full_data_all %>% 
-  mutate(county_fips = substr(trct, 1, 5))
-
-#create job loss by industry data 
-job_loss_by_industry_all <- full_data_1_all %>% 
-  #keep only industry variables
-  filter(startsWith(variable, "cns")) %>% 
-  #multiply number of jobs in industry by the percent change unemployment for that industry
-  mutate(job_loss_in_industry = value * -1 * percent_change_employment ) 
-
-#create index
-job_loss_index_all <- job_loss_by_industry_all %>% 
-  #group by the tract
-  group_by(trct) %>% 
-  #sum job losses by industry together
-  summarise(job_loss_index = sum(job_loss_in_industry)) %>% 
-  #ungroup data
-  ungroup()
-
-
-
-#select total jobs for under 40k
-total_jobs <-filter(full_data_1, 
-                    variable == "c000") %>% 
-  select(trct, 
-         county_fips,
-         county_name,
-         cbsa,
-         cbsa_name,
-         total_jobs_under_40 = value) %>% 
-  #join to get index for jobs under 40k
-  left_join(job_loss_index, by = "trct")
-
-
-#select totals job, all jobs
-total_jobs_all <- filter(lodes_all, 
-                     variable == "c000") %>% 
-  select(trct, total_jobs_all = value) %>% 
-  #join to get index for all jobs
-  left_join(job_loss_index_all, by = "trct")
-
-#combine all data together
-combined_all <- left_join(total_jobs, 
-                          total_jobs_all,
-                          by = "trct", 
-                          suffix = c("_under_40",
-                                     "_all")) 
-
-#summarise jobs at a group level, cbsa or county, 
-#and compute percentages of job loss for lodes under 40k and total lodes
-summarise_job_loss <- function(df, grouped_var){
-  df %>% 
-    group_by({{grouped_var}}) %>% 
-    select( {{grouped_var}},
-             total_jobs_under_40,
-             total_jobs_all,
-             job_loss_index_under_40,
-             job_loss_index_all) %>%
-    summarise_all(
-                 ~sum(., na.rm=T)) %>% 
-    ungroup() %>% 
-    mutate(under_40_index_perc = job_loss_index_under_40 / total_jobs_under_40,
-           total_index_perc = job_loss_index_all / total_jobs_all) %>% 
-    select(-c(total_jobs_under_40,
-              total_jobs_all,
-              job_loss_index_under_40,
-              job_loss_index_all))
-}
-
-
-#summarise by county and merge on county names
-county_job_loss<- summarise_job_loss(combined_all, county_fips) %>% 
-  left_join(combined_all %>% 
-              select(county_fips, county_name) %>% 
-              distinct() %>% 
-              filter(!is.na(county_fips) & !is.na(county_name)), by = "county_fips") 
-
-#summarise by cbsa and merge on cbsa names
-cbsa_job_loss <- summarise_job_loss(combined_all, cbsa) %>% 
-  filter(!is.na(cbsa)) %>% 
-  left_join(combined_all %>% 
-              select(cbsa, cbsa_name) %>% 
-              distinct() %>% 
-              filter(!is.na(cbsa) & !is.na(cbsa_name)), by = "cbsa") 
-  
-
-
-#convert bbox object to dataframe
-bbox_as_df <- function(my_bbox) {
-  my_bbox %>%
-    tibble() %>%
-    mutate(names = c("xmin",
-                     "ymin",
-                     "xmax",
-                     "ymax")) %>%
-    rename(values = ".") %>% 
-    mutate(values = as.numeric(values)) %>%
-    pivot_wider(names_from = names, 
-                values_from = values)
-}
-
-#create bounding box given a fips code and geography - geo is either "cbsa" or "county_fips"
-create_bbox <- function(my_fips, geo){
-  filter(job_loss_wide_sf_1, 
-         {{geo}} == my_fips) %>% 
-    st_bbox() %>% 
-    bbox_as_df()
-}
-
-#get unique counties
-my_county_fips <- job_loss_wide_sf_1 %>% 
-  filter(!is.na(county_fips)) %>%
-  pull(county_fips) %>% 
-  unique()
-
-#get unique cbsas
-my_cbsas <- job_loss_wide_sf_1 %>% 
-  filter(!is.na(cbsa)) %>%
-  pull(cbsa) %>% 
-  unique()
-
-
-#get all county bboxes
-#note: these take some time. any thoughts on how to make faster?
-county_bbox<-my_county_fips %>%
-  map_df(~create_bbox(., county_fips)) %>% 
-  cbind(my_county_fips, .)
-
-#get all cbsa bboxes
-#note: these take some time. any thoughts on how to make faster? 
-cbsa_bbox <- my_cbsas %>% 
-  map_df(~create_bbox(., cbsa)) %>% 
-  cbind(my_cbsas,  .)
-
-#join together bbox data and county job loss data, and reorder
-county_final <- left_join(county_bbox %>% rename(county_fips = my_county_fips), 
-                          county_job_loss,
-                          by = "county_fips") %>% 
-  select(county_fips, county_name, everything())
-
-#join together bbox data and cbsa job loss data, and reorder
-cbsa_final <- left_join(cbsa_bbox %>% rename(cbsa = my_cbsas), cbsa_job_loss, by= "cbsa")%>% 
-  select(cbsa, cbsa_name, everything())
-
-#write out final data with bounding boxes
-write_csv(county_final, "data/processed-data/s3_final/county_job_loss.csv")
-write_csv(cbsa_final, "data/processed-data/s3_final/cbsa_job_loss.csv")
+# Ben says he no longer needs the bbox file as mapbox creates them
+# #Total data (not just under 40k)
+# #join lodes data with most recent job loss data,
+# #with industry names dataframe, and with the geographic xwalk
+# full_data_all <- left_join(lodes_all, 
+#                        job_loss_estimates, 
+#                        by = c("variable" = "lodes_var")) %>% 
+#   left_join(lehd_types, by = c("variable" = "lehd_var")) %>%
+#   left_join(trct_cty_cbsa_xwalk, by = c("trct" = "GEOID")) 
+# 
+# #trct_cty_cbsa_xwalk is missing some county_fips - 
+# #note actually much less than this, as data long by variable
+# sum(is.na(full_data_all$county_fips))
+# 
+# #add correct county_fips 
+# full_data_1_all <- full_data_all %>% 
+#   mutate(county_fips = substr(trct, 1, 5))
+# 
+# #create job loss by industry data 
+# job_loss_by_industry_all <- full_data_1_all %>% 
+#   #keep only industry variables
+#   filter(startsWith(variable, "cns")) %>% 
+#   #multiply number of jobs in industry by the percent change unemployment for that industry
+#   mutate(job_loss_in_industry = value * -1 * percent_change_employment ) 
+# 
+# #create index
+# job_loss_index_all <- job_loss_by_industry_all %>% 
+#   #group by the tract
+#   group_by(trct) %>% 
+#   #sum job losses by industry together
+#   summarise(job_loss_index = sum(job_loss_in_industry)) %>% 
+#   #ungroup data
+#   ungroup()
+# 
+# 
+# 
+# #select total jobs for under 40k
+# total_jobs <-filter(full_data_1, 
+#                     variable == "c000") %>% 
+#   select(trct, 
+#          county_fips,
+#          county_name,
+#          cbsa,
+#          cbsa_name,
+#          total_jobs_under_40 = value) %>% 
+#   #join to get index for jobs under 40k
+#   left_join(job_loss_index, by = "trct")
+# 
+# 
+# #select totals job, all jobs
+# total_jobs_all <- filter(lodes_all, 
+#                      variable == "c000") %>% 
+#   select(trct, total_jobs_all = value) %>% 
+#   #join to get index for all jobs
+#   left_join(job_loss_index_all, by = "trct")
+# 
+# #combine all data together
+# combined_all <- left_join(total_jobs, 
+#                           total_jobs_all,
+#                           by = "trct", 
+#                           suffix = c("_under_40",
+#                                      "_all")) 
+# 
+# #summarise jobs at a group level, cbsa or county, 
+# #and compute percentages of job loss for lodes under 40k and total lodes
+# summarise_job_loss <- function(df, grouped_var){
+#   df %>% 
+#     group_by({{grouped_var}}) %>% 
+#     select( {{grouped_var}},
+#              total_jobs_under_40,
+#              total_jobs_all,
+#              job_loss_index_under_40,
+#              job_loss_index_all) %>%
+#     summarise_all(
+#                  ~sum(., na.rm=T)) %>% 
+#     ungroup() %>% 
+#     mutate(under_40_index_perc = job_loss_index_under_40 / total_jobs_under_40,
+#            total_index_perc = job_loss_index_all / total_jobs_all) %>% 
+#     select(-c(total_jobs_under_40,
+#               total_jobs_all,
+#               job_loss_index_under_40,
+#               job_loss_index_all))
+# }
+# 
+# 
+# #summarise by county and merge on county names
+# county_job_loss<- summarise_job_loss(combined_all, county_fips) %>% 
+#   left_join(combined_all %>% 
+#               select(county_fips, county_name) %>% 
+#               distinct() %>% 
+#               filter(!is.na(county_fips) & !is.na(county_name)), by = "county_fips") 
+# 
+# #summarise by cbsa and merge on cbsa names
+# cbsa_job_loss <- summarise_job_loss(combined_all, cbsa) %>% 
+#   filter(!is.na(cbsa)) %>% 
+#   left_join(combined_all %>% 
+#               select(cbsa, cbsa_name) %>% 
+#               distinct() %>% 
+#               filter(!is.na(cbsa) & !is.na(cbsa_name)), by = "cbsa") 
+#   
+# 
+# 
+# #convert bbox object to dataframe
+# bbox_as_df <- function(my_bbox) {
+#   my_bbox %>%
+#     tibble() %>%
+#     mutate(names = c("xmin",
+#                      "ymin",
+#                      "xmax",
+#                      "ymax")) %>%
+#     rename(values = ".") %>% 
+#     mutate(values = as.numeric(values)) %>%
+#     pivot_wider(names_from = names, 
+#                 values_from = values)
+# }
+# 
+# #create bounding box given a fips code and geography - geo is either "cbsa" or "county_fips"
+# create_bbox <- function(my_fips, geo){
+#   filter(job_loss_wide_sf_1, 
+#          {{geo}} == my_fips) %>% 
+#     st_bbox() %>% 
+#     bbox_as_df()
+# }
+# 
+# #get unique counties
+# my_county_fips <- job_loss_wide_sf_1 %>% 
+#   filter(!is.na(county_fips)) %>%
+#   pull(county_fips) %>% 
+#   unique()
+# 
+# #get unique cbsas
+# my_cbsas <- job_loss_wide_sf_1 %>% 
+#   filter(!is.na(cbsa)) %>%
+#   pull(cbsa) %>% 
+#   unique()
+# 
+# 
+# #get all county bboxes
+# #note: these take some time. any thoughts on how to make faster?
+# county_bbox<-my_county_fips %>%
+#   map_df(~create_bbox(., county_fips)) %>% 
+#   cbind(my_county_fips, .)
+# 
+# #get all cbsa bboxes
+# #note: these take some time. any thoughts on how to make faster? 
+# cbsa_bbox <- my_cbsas %>% 
+#   map_df(~create_bbox(., cbsa)) %>% 
+#   cbind(my_cbsas,  .)
+# 
+# #join together bbox data and county job loss data, and reorder
+# county_final <- left_join(county_bbox %>% rename(county_fips = my_county_fips), 
+#                           county_job_loss,
+#                           by = "county_fips") %>% 
+#   select(county_fips, county_name, everything())
+# 
+# #join together bbox data and cbsa job loss data, and reorder
+# cbsa_final <- left_join(cbsa_bbox %>% rename(cbsa = my_cbsas), cbsa_job_loss, by= "cbsa")%>% 
+#   select(cbsa, cbsa_name, everything())
+# 
+# #write out final data with bounding boxes
+# write_csv(county_final, "data/processed-data/s3_final/county_job_loss.csv")
+# write_csv(cbsa_final, "data/processed-data/s3_final/cbsa_job_loss.csv")
 
 my_states <- st_read("data/raw-data/big/states.geojson") %>% 
   st_drop_geometry() %>% 

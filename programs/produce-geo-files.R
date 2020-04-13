@@ -5,7 +5,7 @@ library(tidyverse)
 library(sf)
 library(jsonlite)
 
-
+options(scipen = 999)
 
 
 # Get counties around south dakota
@@ -93,17 +93,38 @@ my_cbsas<- st_read("data/raw-data/big/cbsas.geojson") %>%
   select(cbsa_fips = GEOID, cbsa_name = NAME)
 
 #join tract shapefile with cbsa shapefile
-joined_cbsa<- st_join(my_tracts %>% select(GEOID), my_cbsas, join = st_covered_by)
+my_intersections <- st_intersection(my_tracts %>% select(GEOID), my_cbsas)
+
+#add area of intersections
+my_intersections_1 <- my_intersections %>% 
+  mutate(int_area = st_area(my_intersections)) 
+
+#add area of tract
+my_tracts_area <- my_tracts %>% 
+  transmute(GEOID, tract_area = st_area(my_tracts))
+
+#calculate intersection / tract and filter for only areas where intersection is mostly in tract
+joined_cbsa_2<-my_intersections_1 %>% 
+  st_drop_geometry() %>% 
+  right_join(my_tracts_area, "GEOID") %>% 
+  mutate(perc = int_area / tract_area,
+         perc = as.numeric(perc)) %>% 
+  filter(perc >= .995)
+
 
 #tracts are not in multiple cbsas
-joined_cbsa$GEOID %>% 
+joined_cbsa_2$GEOID %>% 
   unique() %>%
-  length() == nrow(joined_cbsa)
+  length() == nrow(joined_cbsa_2)
 
+#join data back onto tract data
+final_joined_cbsa <- my_tracts %>% 
+  select(GEOID) %>% 
+  left_join(joined_cbsa_2, "GEOID")
 
 
 #create crosswalk
-trct_cty_cbsa <- joined_cbsa %>% 
+trct_cty_cbsa <- final_joined_cbsa %>% 
   #drop geometry
   st_drop_geometry() %>% 
   #add county fips
