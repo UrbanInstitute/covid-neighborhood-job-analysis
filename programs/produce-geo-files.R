@@ -117,7 +117,9 @@ write_csv(trct_cty_cbsa, "data/processed-data/tract_county_cbsa_xwalk.csv")
 
 #-----------  
 #Write out CbsaToCounty and CountyToCbsa JSONS
+
 county_to_cbsa = trct_cty_cbsa %>% 
+  filter(!is.na(cbsa)) %>% 
   group_by(county_fips) %>% 
   summarize(cbsas = list(unique(cbsa)))  %>% 
   pivot_wider(names_from = county_fips, values_from = cbsas)
