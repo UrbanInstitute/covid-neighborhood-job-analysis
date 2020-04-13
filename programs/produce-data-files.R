@@ -146,8 +146,14 @@ full_data <- left_join(lodes_joined,
 
 #trct_cty_cbsa_xwalk is missing some county_fips - 
 #note actually much less than this, as data long by variable
+# AN: Looks like this just one tract: 12057980100 in Florida
 sum(is.na(full_data$county_fips))
 
+# AN: I actually don't know if want to overwrite the county
+# fips after we've done the left join with the tract_cnty_cbsa crosswalk.
+# If there are any missing fips, then they aren't in our master census tract
+# and that's a problem. In this case it seems to be just this one tract in 
+# Florida that's in teh lodes data but not in our master 2018 tract file from the Census FTP site
 #add correct county_fips 
 full_data_1 <- full_data %>% 
   mutate(county_fips = substr(trct, 1, 5))
@@ -184,9 +190,10 @@ job_loss_wide <- job_loss_by_industry %>%
   left_join(job_loss_index, by = "trct") %>% 
   rename(X000 = job_loss_index)
 
-#AN: Why are the below 2 lines different? Looks like geocorr is just missing some tracts
-# trct_cty_cbsa_xwalk %>% nrow() #Crosswalk from Mable has 72,531 tracts
-# my_tracts %>% nrow() #Data from Census FTP site has 73,745 tracts
+#AN: Looks like LODES is missing some tracts (and has one exta tract)
+trct_cty_cbsa_xwalk %>% nrow() #Manually created xwalk has 73,745 tracts
+my_tracts %>% nrow()        #Data from Census FTP site has 73,745 tracts
+job_loss_wide %>% nrow()   #Lodes data has 72,738 tracts
 
 #CD: correct. Ajjit and i discussed, he will look into if this is a problem 
 # Below i flagged 100 tracts in my_tracts that are not in job_loss_wide: 99 are water tracts that are formatted with "XXXXX99XXXX" 
