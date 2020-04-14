@@ -282,9 +282,8 @@ job_loss_wide_sf_3 %>%
 
 job_loss_wide_sf_3 %>%
   filter(is.na(cbsa)) %>% 
-  select(-c(county_fips, 
-            county_name,
-            cbsa_name)) %>% 
+  st_union() %>% 
+  st_sf() %>% 
   remove_and_write(no_cbsa_geo_file_name)
 
 #create directories for smaller geojson writeouts

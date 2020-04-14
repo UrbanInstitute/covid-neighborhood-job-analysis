@@ -2,7 +2,7 @@ library(tidyverse)
 library(sf)
 library(mapview)
 
-#Run up to line 119 of produce-geo-files.R 
+#Run up to line 137 of produce-geo-files.R 
 
 
 tracts_out_of_cbsas = final_joined_cbsa %>%
