@@ -8,15 +8,18 @@ library(tigris)
 options(use_tigris_cache = T, 
         tigris_class = "sf")
 
-
-# Census tract and county geographic files
-# Tracts simplify to 1:500k, Counties to 1:5m
-# Census tract (2010)
-
-#Create output direcotry to place big raw-data in.
+#Create output directory to place big raw-data in.
 dir.create("data/raw-data/big", showWarnings = FALSE)
 
+#Download Census tracts (2010)
+#--------------------------------------------------------
+
+# Census tract  geographic files
+# Tracts simplify to 1:500k, 
+# Census tract (2010)
+
 download_by_state <- function(state) {
+  #Note we use GENZ2018, or the Cartographic boundary files
   download.file(url = str_glue("https://www2.census.gov/geo/tiger/GENZ2018/shp/cb_2018_{state}_tract_500k.zip"),
                 destfile = str_glue("data/raw-data/big/{state}.zip"))
   unzip(zipfile = str_glue("data/raw-data/big/{state}.zip"),
@@ -27,7 +30,10 @@ state_fips <- fromJSON("https://api.census.gov/data/2010/dec/sf1?get=NAME&for=st
 state_fips <- state_fips[, 2][c(2:length(state_fips[, 2]))]
 dl <- state_fips %>% map(download_by_state)
 
-# LODES data from the Urban Institute Data Catalog
+
+#Download LODES data from the Urban Institute Data Catalog
+#--------------------------------------------------------
+
 # All jobs, RAC
 download.file(url = "https://ui-spark-data-public.s3.amazonaws.com/lodes/summarized-files/Tract_level/all_jobs_excluding_fed_jobs/rac_all_tract_level.csv",
               destfile = "data/raw-data/big/rac_all.csv")
@@ -35,6 +41,10 @@ download.file(url = "https://ui-spark-data-public.s3.amazonaws.com/lodes/summari
 # All jobs, RAC, >=$40,000 per year
 download.file(url = "https://urban-data-catalog.s3.amazonaws.com/drupal-root-live/2020/03/30/rac_se03_tract.csv",
               destfile = "data/raw-data/big/rac_se03.csv")
+
+
+#Download Unemployment data from BLS and WA state
+#--------------------------------------------------------
 
 # BLS CES Data
 download.file(url = "https://download.bls.gov/pub/time.series/ce/ce.data.0.AllCESSeries",
@@ -53,25 +63,18 @@ file.rename(from = "data/raw-data/big/2019.q1-q3.by_area/2019.q1-q3 53000 Washin
 unlink("data/raw-data/big/2019.q1-q3.by_area", recursive = TRUE)
 
 # WA state unemployment estimates, most recent
-# NOTE this file gets corrupted when automatically downloaded, so I manually
-# downloaded this to the small folder given its size
-# download.file(url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week 13_2020.xlsx",
-#              destfile = "data/raw-data/big/UI claims week 13_2020.xlsx")
+download.file(url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week 13_2020.xlsx", 
+              destfile = "data/raw-data/big/UI claims week 13_2020.xlsx",
+              #download file in binary mode, if you don't, xlsx file is corrupted
+              mode="wb")
 
 
+#Download Census geographies from tigris
+#--------------------------------------------------------
 
-
-
-#download tigris files for use on s3
-
-#get cbsa spatial files
+#all cbsas, counties, and states
 my_cbsas<-core_based_statistical_areas(cb = T)
-  
-
-#get county spatial files
 my_counties <- counties(cb = T)
-
-#get state spatial files
 my_states <- states(cb = T) 
 
 clean_and_write_sf <- function(name, filepath) {
@@ -84,7 +87,6 @@ clean_and_write_sf <- function(name, filepath) {
 
 dir.create("data/processed-data/s3_final", showWarnings = FALSE)
 
-#write out geographies for use on s3 
 clean_and_write_sf(my_cbsas,  "data/raw-data/big/cbsas.geojson")
 clean_and_write_sf(my_counties, "data/raw-data/big/counties.geojson")
 clean_and_write_sf(my_states, "data/raw-data/big/states.geojson")
