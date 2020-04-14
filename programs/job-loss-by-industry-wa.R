@@ -5,20 +5,33 @@ library(jsonlite)
 library(testit)
 library(readxl)
 
-# Parameters for start quarter from which to compare job change and
-# The number of past weeks of unemployment data to use
+#### Set parameters ####
+# start_quarter: quarter from which to compare job change and
+# past_unemp_weeks: # of past weeks of unemployment data to use
+# filename: filename of WA unemployment data (downloaded from 
+#           download-data.R)
 start_quarter <- 3
 past_unemployment_weeks <- 4
 filename <- "UI claims week 13_2020.xlsx"
 
-# Read in all CES data
+
+#### Read in data ####
+
+# Read in BLS CES data
 qcew_all <- read_csv("data/raw-data/big/wa_qcew.csv")
 
-# Read in crosswalk from NAICS supersector to LODES
+# Read in crosswalk from NAICS supersector to LODES.
 lodes_crosswalk <- fromJSON("data/raw-data/small/naics-to-led.json")
 
 # Read in crosswalk from NAICS sector to LODES
 lodes_crosswalk_sector <- fromJSON("data/raw-data/small/naics-sector-to-led.json")
+
+# Above two crosswalks were constructed manually from pg 7 of
+# https://lehd.ces.census.gov/data/lodes/LODES7/LODESTechDoc7.4.pdf
+
+
+#### Get total_employment by LODES industry code ####
+#--------------------------------------------------------
 
 # Subset to NAICS supersector and latest quarter
 qcew_sub <- qcew_all %>%
@@ -38,6 +51,12 @@ add_lodes_code <- function(industry_code){
 }
 qcew_led <- qcew_agg %>%
               mutate(lodes_var = qcew_agg$industry_code %>% map_chr(add_lodes_code))
+
+
+
+# Get total unemployment claims for past_unemployment_weeks
+# by LODES industry code
+#--------------------------------------------------------
 
 # Read in weekly unemployment claims, drop all columns except the first 2
 # and the last `n` that are not null
@@ -68,8 +87,10 @@ weekly_unemployment_totals <- weekly_unemployment_sub %>%
                                 group_by(lodes_var) %>%
                                 summarize(unemployment_totals = sum(unemployment))
 
-# Merge labor totals with unemployment totals to get percent change by industry
-# and write out file
+# Get percent change in employment by LODES indsutry code 
+# using unemployment claims totals and employment totals
+#--------------------------------------------------------
+
 # Note: assumes no hires, which is not true, but should generally show relative
 # job change in the short term until we get BLS CES data
 percent_change_industry <- qcew_led %>%

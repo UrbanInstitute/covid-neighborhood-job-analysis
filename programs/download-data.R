@@ -8,10 +8,10 @@ library(tigris)
 options(use_tigris_cache = T, 
         tigris_class = "sf")
 
-#Create output directory to place big raw-data in.
+# Create output directory to place big raw-data in.
 dir.create("data/raw-data/big", showWarnings = FALSE)
 
-#Download Census tracts (2010)
+# Download Census tracts (2010)
 #--------------------------------------------------------
 
 # Census tract  geographic files
@@ -19,7 +19,7 @@ dir.create("data/raw-data/big", showWarnings = FALSE)
 # Census tract (2010)
 
 download_by_state <- function(state) {
-  #Note we use GENZ2018, or the Cartographic boundary files
+  # Note we use GENZ2018, or the Cartographic boundary files
   download.file(url = str_glue("https://www2.census.gov/geo/tiger/GENZ2018/shp/cb_2018_{state}_tract_500k.zip"),
                 destfile = str_glue("data/raw-data/big/{state}.zip"))
   unzip(zipfile = str_glue("data/raw-data/big/{state}.zip"),
@@ -31,7 +31,7 @@ state_fips <- state_fips[, 2][c(2:length(state_fips[, 2]))]
 dl <- state_fips %>% map(download_by_state)
 
 
-#Download LODES data from the Urban Institute Data Catalog
+# Download LODES data from the Urban Institute Data Catalog
 #--------------------------------------------------------
 
 # All jobs, RAC
@@ -43,7 +43,7 @@ download.file(url = "https://urban-data-catalog.s3.amazonaws.com/drupal-root-liv
               destfile = "data/raw-data/big/rac_se03.csv")
 
 
-#Download Unemployment data from BLS and WA state
+# Download Unemployment data from BLS and WA state
 #--------------------------------------------------------
 
 # BLS CES Data
@@ -69,10 +69,10 @@ download.file(url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Defau
               mode="wb")
 
 
-#Download Census geographies from tigris
+# Download Census geographies from tigris
 #--------------------------------------------------------
 
-#all cbsas, counties, and states
+# Download all cbsas, counties, and states
 my_cbsas<-core_based_statistical_areas(cb = T)
 my_counties <- counties(cb = T)
 my_states <- states(cb = T) 
