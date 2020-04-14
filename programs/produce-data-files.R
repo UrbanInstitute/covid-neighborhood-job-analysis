@@ -519,43 +519,60 @@ my_cbsas <- st_read("data/raw-data/big/cbsas.geojson") %>%
 
 
 
-# create a binned category for the max to use in the county and cbsa zoom-in bar charts. 
-# should be the max value of any industry in the tract inside of the geo, but relatively standardized
+#get sums of tracts for all variables at the cbsa and county levels
+
+
+
+# create a binned category for the max to use in the on load bar charts
+# should be the max sum value of any industry in the county/cbsa, but relatively standardized
 # function takes in a grouped dataframe (by the geography) and finds the max job loss in any industry,
-# setting bins right now at 100, 150, 200, 250, and 600
-add_bins <- function(grouped){
-  grouped %>% 
-    pivot_longer(cols = X01:X20) %>%
-    mutate(max_temp = max(value),
-           max = case_when(
-            max_temp <=100 ~ 100,
-            max_temp >100 & max_temp <= 150 ~ 150,
-            max_temp > 150 & max_temp <= 200 ~ 200,
-            max_temp > 200 & max_temp <= 250 ~ 250,
-            max_temp > 250 & max_temp <= 600 ~ 600
-           )) %>% 
-    select(-max_temp) %>% 
-    pivot_wider(names_from ="name", values_from = "value") %>% 
-    select(-max, everything())
+# setting bins right now at 100, 250, 500, 750, 1000, 2000, 5000, and max value
+
+add_bins <- function(data, group){
+  data %>% 
+    pivot_longer(cols = X01:X20, 
+                 names_to= "job_type", 
+                 values_to = "job_loss") %>% 
+  group_by({{group}}) %>% 
+    mutate(max_temp = max(job_loss)) %>% 
+    ungroup() %>% 
+    mutate(max_max_temp = max(max_temp)) %>% 
+    group_by({{group}}) %>% 
+    mutate(max = case_when(
+      max_temp <=100 ~ 100,
+      max_temp > 100 & max_temp <= 250 ~ 250,
+      max_temp > 250 & max_temp <=500 ~ 500,
+      max_temp > 500 & max_temp <=750 ~ 750,
+      max_temp > 750 & max_temp <= 1000 ~ 1000,
+      max_temp > 1000 & max_temp <= 2000 ~ 2000,
+      max_temp > 2000 & max_temp <= 5000 ~ 5000,
+      max_temp > 5000 ~ max_max_temp 
+    )) %>% 
+    select(-c(max_temp, max_max_temp)) %>% 
+    pivot_wider(names_from ="job_type", values_from = "job_loss") %>% 
+    select(-max, everything()) %>% 
+    ungroup()
   
 }
 
-#get medians (of tract level information) for all variables at the cbsa and county levels
+
 
 #county
-county_medians <-job_loss_wide_sf_3 %>% 
+county_sums <-job_loss_wide_sf_3 %>% 
   st_drop_geometry() %>% 
   filter(!is.na(county_fips)) %>%
   group_by(county_fips) %>% 
-  add_bins() %>%
+  #add_bins() %>%
   select(-c(GEOID, 
             cbsa,
             cbsa_name,
             county_name)) %>%
   #note: this calculates the median of `max`` as well, but `max` should all be one unique value anyway
-  summarise_all(~median(.)) %>% 
+  summarise_all(~sum(.)) %>% 
+  #add max related to bins
+  add_bins(county_fips) %>% 
   #join to counties
-  right_join(my_counties, by = "county_fips" ) %>% 
+  left_join(x = my_counties, y = ., by = "county_fips" ) %>% 
   #reorder
   select(county_fips, county_name, state_name, everything()) %>% 
   #keep only rows with data
@@ -565,49 +582,56 @@ county_medians <-job_loss_wide_sf_3 %>%
 
 
 #cbsa
-cbsa_medians <-job_loss_wide_sf_3 %>% 
+cbsa_sums <-job_loss_wide_sf_3 %>% 
   st_drop_geometry() %>% 
   filter(!is.na(cbsa)) %>%
   mutate(cbsa = as.character(cbsa)) %>%
   group_by(cbsa) %>% 
-  add_bins() %>%
+ 
   select(-c(GEOID, 
             county_fips,
             county_name, 
             cbsa_name)) %>%
-  summarise_all(~median(.))  %>% 
+  summarise_all(~sum(.))  %>% 
+  #add max bins
+  add_bins(cbsa) %>%
   #join to cbsas
-  right_join(my_cbsas, by = "cbsa") %>%
+  left_join(x = my_cbsas, y = ., by = "cbsa") %>%
   #reorder
   select(cbsa, cbsa_name, everything()) %>%
   #keep only rows with data
   filter(!is.na(X000)) 
 
 
-remove_and_write(county_medians, "data/processed-data/s3_final/median_job_loss_county.geojson")
-remove_and_write(cbsa_medians, "data/processed-data/s3_final/median_job_loss_cbsa.geojson")
+
+#-----
+
+
+remove_and_write(county_sums, "data/processed-data/s3_final/sum_job_loss_county.geojson")
+remove_and_write(cbsa_sums, "data/processed-data/s3_final/sum_job_loss_cbsa.geojson")
 
 #write to csv
-county_medians %>% 
-  select(-geometry) %>%
-write_csv("data/processed-data/s3_final/median_job_loss_county.csv") 
+county_sums %>% 
+  st_drop_geometry() %>%
+write_csv("data/processed-data/s3_final/sum_job_loss_county.csv") 
 
 #write to csv
-cbsa_medians %>% 
-  select(-geometry) %>%
-  write_csv("data/processed-data/s3_final/median_job_loss_cbsa.csv") 
+cbsa_sums %>% 
+  st_drop_geometry() %>%
+  write_csv("data/processed-data/s3_final/sum_job_loss_cbsa.csv") 
 
 #get us medians and write out
-us_medians <- job_loss_wide_sf_3 %>% 
+us_sums <- job_loss_wide_sf_3 %>% 
   st_drop_geometry() %>% 
   select(-c(GEOID, 
             county_fips,
             county_name, 
             cbsa,
             cbsa_name)) %>%
-  summarise_all(~median(.)) %>% 
+  summarise_all(~sum(.)) %>% 
   mutate(GEOID = "99") %>%
   select(GEOID, everything()) %>% 
-  write_csv("data/processed-data/s3_final/median_job_loss_us.csv")
-  
+  write_csv("data/processed-data/s3_final/sum_job_loss_us.csv")
+
+
 
