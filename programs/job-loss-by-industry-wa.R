@@ -25,6 +25,10 @@ lodes_crosswalk <- fromJSON("data/raw-data/small/naics-to-led.json")
 # Read in crosswalk from NAICS sector to LODES
 lodes_crosswalk_sector <- fromJSON("data/raw-data/small/naics-sector-to-led.json")
 
+# Read in industry to lodes xwalk, to put names to lodes industries
+lehd_types <- read_csv("data/raw-data/small/lehd_types.csv")
+
+
 # Above two crosswalks were constructed manually from pg 7 of
 # https://lehd.ces.census.gov/data/lodes/LODES7/LODESTechDoc7.4.pdf
 
@@ -81,7 +85,11 @@ weekly_unemployment_totals <- weekly_unemployment_sub %>%
                                 # AN: Any reasom you're selecting by index rather than by 
                                 # select(c((past_unemployment_weeks+1):(past_unemployment_weeks+2))) %>%
                                 group_by(lodes_var) %>%
-                                summarize(unemployment_totals = sum(unemployment))
+                                summarize(unemployment_totals = sum(unemployment)) %>% 
+                                left_join(lehd_types %>%
+                                            transmute(lodes_var = toupper(lehd_var),
+                                                      lehd_name), 
+                                          by = c("lodes_var"))
 
 
 ##----Get % change in employment by LODES industry code-----------------------
@@ -93,6 +101,7 @@ percent_change_industry <- qcew_led %>%
                           # merge(weekly_unemployment_totals, by = "lodes_var") %>%
                             mutate(percent_change_employment = -unemployment_totals / total_employment) %>%
                             arrange(lodes_var) %>%
+                            select(lehd_name, lodes_var, everything()) %>% 
                             write_csv(str_glue("data/processed-data/job_change_wa_last_{past_unemployment_weeks}_weeks.csv"))
 percent_change_industry %>% 
   write_csv("data/processed-data/job_change_wa_most_recent.csv")
