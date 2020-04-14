@@ -252,9 +252,6 @@ job_loss_wide_sf_3 <- job_loss_wide_sf_2 %>%
   mutate(X000 = round(X000)) %>% 
   filter(!is.na(X000))
 
-geo_file_name <- "data/processed-data/s3_final/job_loss_by_tract.geojson"
-
-no_cbsa_geo_file_name <- "data/processed-data/s3_final/no_cbsa_tracts.geojson"
 
 #remove geojson file and write out
 remove_and_write <- function(sf_data, geo_file_name){
@@ -270,21 +267,17 @@ remove_and_write <- function(sf_data, geo_file_name){
 }
 
 #remove extreaneous variables and write out
-#   1)job_loss_by_tract.geojson (list of all tracts,
-#     thier cbsa (can be NA) and job loss estimates)
-#   2) no_cbsa_tracts.geojson (list of all tracts 
-#     not contianed in any cbsa)
+#job_loss_by_tract.geojson which is list of all tracts,
+#thier cbsa (can be NA) and job loss estimates
+
+geo_file_name <- "data/processed-data/s3_final/job_loss_by_tract.geojson"
+
 job_loss_wide_sf_3 %>%
   select(-c(county_fips, 
             county_name,
             cbsa_name)) %>% 
   remove_and_write(geo_file_name)
 
-job_loss_wide_sf_3 %>%
-  filter(is.na(cbsa)) %>% 
-  st_union() %>% 
-  st_sf() %>% 
-  remove_and_write(no_cbsa_geo_file_name)
 
 #create directories for smaller geojson writeouts
 if(!dir.exists("data/processed-data/s3_final/county")){

@@ -47,7 +47,7 @@ not_all_na <- function(var){
 add_naics_super_lodes <- function(naics){
   str_glue("CNS",lodes_crosswalk_sector[naics][[1]])
 }
-weekly_unemployment <- read_excel(str_glue("data/raw-data/small/{filename}"),
+weekly_unemployment <- read_excel(str_glue("data/raw-data/big/{filename}"),
                                   sheet = "2DigitNAICS_ICs ",
                                   skip = 3)
 weekly_unemployment_sub <- weekly_unemployment %>%
