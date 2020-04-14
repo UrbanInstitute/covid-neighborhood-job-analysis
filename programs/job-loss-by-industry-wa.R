@@ -1,11 +1,11 @@
-# Calculate Job loss by LODES Industry Sector using BLS data
+# Calculate Job loss by LODES Industry Sector using BLS/WA state data
 
 library(tidyverse)
 library(jsonlite)
 library(testit)
 library(readxl)
 
-#### Set parameters ####
+##----Set Parameters----------------------------------------------------
 # start_quarter: quarter from which to compare job change and
 # past_unemp_weeks: # of past weeks of unemployment data to use
 # filename: filename of WA unemployment data (downloaded from 
@@ -15,8 +15,7 @@ past_unemployment_weeks <- 4
 filename <- "UI claims week 13_2020.xlsx"
 
 
-#### Read in data ####
-
+##----Read in data------------------------------------------------------
 # Read in BLS CES data
 qcew_all <- read_csv("data/raw-data/big/wa_qcew.csv")
 
@@ -30,9 +29,7 @@ lodes_crosswalk_sector <- fromJSON("data/raw-data/small/naics-sector-to-led.json
 # https://lehd.ces.census.gov/data/lodes/LODES7/LODESTechDoc7.4.pdf
 
 
-#### Get total_employment by LODES industry code ####
-#--------------------------------------------------------
-
+##----Get total_employment by LODES industry code-------------------------
 # Subset to NAICS supersector and latest quarter
 qcew_sub <- qcew_all %>%
               filter(agglvl_code == 54, 
@@ -54,9 +51,7 @@ qcew_led <- qcew_agg %>%
 
 
 
-# Get total unemployment claims for past_unemployment_weeks
-# by LODES industry code
-#--------------------------------------------------------
+##----Get unemploygment claims by LODES industry code-----------------------
 
 # Read in weekly unemployment claims, drop all columns except the first 2
 # and the last `n` that are not null
@@ -75,6 +70,7 @@ weekly_unemployment_sub <- weekly_unemployment %>%
                         select_if(not_all_na)
 cols <- length(colnames(weekly_unemployment_sub))
 weekly_unemployment_sub <- weekly_unemployment_sub %>%
+                        #only keep unemp claims from last n weeks
                         select(c((cols-past_unemployment_weeks):cols))
 
 # Sum across rows to get total unemployment over past n weeks
@@ -87,10 +83,8 @@ weekly_unemployment_totals <- weekly_unemployment_sub %>%
                                 group_by(lodes_var) %>%
                                 summarize(unemployment_totals = sum(unemployment))
 
-# Get percent change in employment by LODES indsutry code 
-# using unemployment claims totals and employment totals
-#--------------------------------------------------------
 
+##----Get % change in employment by LODES industry code-----------------------
 # Note: assumes no hires, which is not true, but should generally show relative
 # job change in the short term until we get BLS CES data
 percent_change_industry <- qcew_led %>%
