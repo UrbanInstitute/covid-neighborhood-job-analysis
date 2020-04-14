@@ -30,7 +30,7 @@ put_object(file = paste0(s3_filepath, "job_loss_by_tract.geojson"),
 put_object(file = paste0(s3_filepath, "no_cbsa_tracts.geojson"), 
            object = "no_cbsa_tracts.geojson",
            bucket = my_bucket_name,
-           multipart = T)
+           multipart = F)
 
 #put cbsa csv in bucket directory
 put_object( paste0(s3_filepath, "cbsa_job_loss.csv"), 
