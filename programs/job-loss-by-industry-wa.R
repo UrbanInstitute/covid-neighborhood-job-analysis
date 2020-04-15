@@ -37,7 +37,7 @@ lehd_types <- read_csv("data/raw-data/small/lehd_types.csv")
 # Subset to NAICS supersector and latest quarter
 qcew_sub <- qcew_all %>%
               filter(agglvl_code == 54, 
-                    qtr == 3)
+                    qtr == start_quarter)
 
 # Aggregate all employment, taking last month of the quarter,
 # By industry by supersector

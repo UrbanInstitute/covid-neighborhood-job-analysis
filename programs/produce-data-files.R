@@ -1,93 +1,35 @@
-#Creates the data files at the Census tract level using 2017 LODES data, 
-#subtracting jobs over 40k from all jobs. BLS or Washington unemployment data is available.  
+# Creates the data files at the Census tract level using 2017 LODES data, 
+# subtracting jobs over 40k from all jobs. BLS or Washington unemployment data is available.  
 
-#load libraries
+# load libraries
 library(tidyverse)
 library(sf)
 
-#choose which dataset to use ; should be either `bls` or `wa`
+#----Set Parameters----------------------------------------------------
+# choose which dataset to use ; should be either `bls` or `wa`
 dataset <- "wa"
 
-#assign path of Lodes data
+# assign path to folder for Lodes data (ie rac_all.csv)
 path <- "data/raw-data/big/"
 
-#Read in full Lodes Data
+#----Read in Data---------------------------------------------
+# Read in full Lodes Data
 lodes_all_raw <- read_csv(paste0(path, "rac_all.csv")) 
 
-#Read in Lodes data for income over 40k
+# Read in Lodes data for income over 40k
 lodes_over_40_raw <- read_csv(paste0(path, "rac_se03.csv")) 
 
-
-#Read in data that we will use 2016 data for given data issues in 2017
+# Read in data that we will use 2016 data for given data issues in 2017
 counties_to_get_2016 <- read_csv("data/processed-data/counties_to_get_2016.csv")
 
-#function to clean data before join
-clean_lodes <- function(df){
-  
-  dat_temp<- df %>%  
-  # join data to choose 2016 data
-  left_join(counties_to_get_2016, by = c("cty"="county_fips")) 
-  
-  # keep 2016 data for counties around and inside south dakota and alaska
-  dat_2016<- dat_temp %>%
-  filter(year == 2016 & should_be_2016 == 1) 
-  
-  # keep 2017 data for counties not around and inside south dakota and alaska
-  dat_2017<- dat_temp %>% 
-  filter(year == 2017 & (should_be_2016 !=1 | is.na(should_be_2016)))
-  
-  # append rows together
-  my_df <- bind_rows(dat_2017, dat_2016)
-  
-  my_df %>%
-  # delete unneded vars
-    select(-c(cty, 
-              ctyname, 
-              st,
-              stname,
-              trctname,
-              should_be_2016)) %>%  
-  #make data long in order to join
-    pivot_longer(starts_with("c"),  
-                 names_to = "variable",
-                 values_to = "value") %>% 
-  #keep only desired variables
-      filter(startsWith(variable, "cns")| #industry vars
-             startsWith(variable, "cr") | #race vars
-             startsWith(variable, "ct") | #ethnicity vars
-             variable == "c000") #total jobs
-}
+# read in industry to lodes xwalk, to put names to lodes industries
+lehd_types <- read_csv("data/raw-data/small/lehd_types.csv")
+
+# read in geography crosswalk from trct to county to cbsa
+trct_cty_cbsa_xwalk <- read_csv("data/processed-data/tract_county_cbsa_xwalk.csv")
 
 
-lodes_all <- lodes_all_raw %>%
-  clean_lodes()
-
-lodes_over_40 <- lodes_over_40_raw %>% 
-  clean_lodes()
-
-
-
-
-
-#join data and create final value
-lodes_joined <- left_join(lodes_all, 
-                          lodes_over_40, 
-                          by = c("year",
-                                 "trct",
-                                 "variable"), 
-                          suffix = c("_all", "_40")) %>% 
-  #subtract income>40k jobs from all jobs 
-  mutate(value = value_all - value_40) %>%
-  #remove total and 40k variables
-  select(-c(value_all, value_40)) 
-
-#check how many values are na
-lodes_joined %>% 
-  pull(value) %>% 
-  is.na() %>% 
-  sum()
-
-
+# Read in % change employement estimates from WA or BLS
 prep_employment_join <- function(df){
   df %>% 
     mutate(lodes_var = tolower(lodes_var)) %>% 
@@ -130,156 +72,169 @@ if(dataset == "wa"){
 }
 
 
-#read in industry to lodes xwalk, to put names to lodes industries
-lehd_types <- read_csv("data/raw-data/small/lehd_types.csv")
+#----Cleanup LODES Data---------------------------------------------
 
-#read in geography crosswalk from trct to county to cbsa
-trct_cty_cbsa_xwalk <- read_csv("data/processed-data/tract_county_cbsa_xwalk.csv")
+# function to clean Lodes before join
+clean_lodes <- function(df){
+  
+  dat_temp<- df %>%  
+    # join data to choose 2016 data
+    left_join(counties_to_get_2016, by = c("cty"="county_fips")) 
+  
+  # keep 2016 data for counties around and inside south dakota and alaska
+  dat_2016<- dat_temp %>%
+    filter(year == 2016 & should_be_2016 == 1) 
+  
+  # keep 2017 data for counties not around and inside south dakota and alaska
+  dat_2017<- dat_temp %>% 
+    filter(year == 2017 & (should_be_2016 !=1 | is.na(should_be_2016)))
+  
+  # append rows together
+  my_df <- bind_rows(dat_2017, dat_2016)
+  
+  my_df %>%
+    # delete unneded vars
+    select(-c(cty, 
+              ctyname, 
+              st,
+              stname,
+              trctname,
+              should_be_2016)) %>%  
+    #make data long in order to join
+    pivot_longer(starts_with("c"),  
+                 names_to = "variable",
+                 values_to = "value") %>% 
+    #keep only desired variables
+    filter(startsWith(variable, "cns")| #industry vars
+             startsWith(variable, "cr") | #race vars
+             startsWith(variable, "ct") | #ethnicity vars
+             variable == "c000") #total jobs
+}
 
-#join lodes data with most recent job loss data,
-#with industry names dataframe, and with the geographic xwalk
-full_data <- left_join(lodes_joined, 
-                       job_loss_estimates, 
-                       by = c("variable" = "lodes_var")) %>% 
-             left_join(lehd_types, by = c("variable" = "lehd_var")) %>%
-             left_join(trct_cty_cbsa_xwalk, by = c("trct" = "GEOID")) 
 
-#trct_cty_cbsa_xwalk is missing some county_fips - 
-#note actually much less than this, as data long by variable
-# AN: Looks like this just one tract: 12057980100 in Florida
-sum(is.na(full_data$county_fips))
+#generate lodes data for <40k jobs
+lodes_all <- lodes_all_raw %>%
+  clean_lodes()
 
-# AN: I actually don't know if want to overwrite the county
-# fips after we've done the left join with the tract_cnty_cbsa crosswalk.
-# If there are any missing fips, then they aren't in our master census tract
-# and that's a problem. In this case it seems to be just this one tract in 
-# Florida that's in teh lodes data but not in our master 2018 tract file from the Census FTP site
-#add correct county_fips 
-full_data_1 <- full_data %>% 
-  mutate(county_fips = substr(trct, 1, 5))
+lodes_over_40 <- lodes_over_40_raw %>% 
+  clean_lodes()
 
-#create job loss by industry data 
-job_loss_by_industry <- full_data_1 %>% 
-  #keep only industry variables
+lodes_joined <- left_join(lodes_all, 
+                          lodes_over_40, 
+                          by = c("year",
+                                 "trct",
+                                 "variable"), 
+                          suffix = c("_all", "_40")) %>% 
+  # subtract income>40k jobs from all jobs 
+  mutate(value = value_all - value_40) %>%
+  # remove total and 40k variables
+  select(-c(value_all, value_40)) 
+
+# check how many values are na
+lodes_joined %>% 
+  pull(value) %>% 
+  is.na() %>% 
+  sum()
+
+
+
+#----Generate job loss estimates for all tracts-----------------------------------
+
+# Generate job loss estimates for each industry across all tracts. 
+
+job_loss_wide = lodes_joined %>% 
+  # join lodes total employment data to % change in 
+  # employment estimates from WA or BLS
+  left_join( job_loss_estimates, 
+          by = c("variable" = "lodes_var"))  %>% 
+  # keep only industry variables
   filter(startsWith(variable, "cns")) %>% 
-  #multiply number of jobs in industry by the percent change unemployment for that industry
-  mutate(job_loss_in_industry = value * -1 * percent_change_employment ) 
+  # multiply number of jobs in industry by the % change unemployment for that industry
+  mutate(job_loss_in_industry = value * -1 * percent_change_employment,
+         ind_var = paste0("X", str_remove(variable, "cns"))) %>% 
+  select(-value, -year, -percent_change_employment, -variable) %>%
+  # pvit wide to go from row=tract-industry  to row=tract
+  pivot_wider(names_from = ind_var, values_from = job_loss_in_industry, id_cols = trct) %>% 
+  # sum all jobs lost across all industries for total job loss per tract
+  mutate(X000 =(.)%>% select(starts_with("X")) %>% rowSums(na.rm=TRUE)) %>% 
+  # append county/cbsa info for each tract
+  left_join(trct_cty_cbsa_xwalk, by = c("trct" = "GEOID")) %>% 
+  select(trct, county_fips, county_name, cbsa, cbsa_name, everything()) %>% 
+  # round jobs by industry to 0.1 (to decrease output file size)
+  mutate_at(.vars = vars(X01:X20), ~round(., digits = 1)) %>% 
+  # round total jobs lost to integer for reader
+  # for reader understandability (What is 1.3 jobs?)
+  mutate(X000 = round(X000)) 
 
-#create index
-job_loss_index <- job_loss_by_industry %>% 
-  #group by the tract
+# Note: every row of job_loss_wide is a tract
+
+# The LODES data has one tract not found in the master 2018 Census tract file.
+# This is tract 12057980100, which is in Florida and seems to be mostly water.
+# For now we exlcude this tract from the analysis
+
+# Display problematic tract
+job_loss_wide %>% 
   group_by(trct) %>% 
-  #sum job losses by industry together
-  summarise(job_loss_index = sum(job_loss_in_industry)) %>% 
-  #ungroup data
-  ungroup()
+  summarize(any_na = any(is.na(county_fips))) %>% 
+  filter(any_na)
+
+# Discard problematic tract 
+job_loss_wide = job_loss_wide %>%
+                filter(trct != "12057980100")
 
 
 
-#create job loss by industry wide file
 
-job_loss_wide <- job_loss_by_industry %>% 
-  transmute(trct,
-         county_fips,
-         county_name, 
-         cbsa,
-         cbsa_name,
-         ind_var = paste0("X", str_remove(variable, "cns")),
-         job_loss_in_industry) %>% 
-  pivot_wider(names_from = ind_var, values_from = job_loss_in_industry) %>% 
-  left_join(job_loss_index, by = "trct") %>% 
-  rename(X000 = job_loss_index)
+#----Append tract geographies to job loss estimates-----------------------------------
 
-#AN: Looks like LODES is missing some tracts (and has one exta tract)
-trct_cty_cbsa_xwalk %>% nrow() #Manually created xwalk has 73,745 tracts
-my_tracts %>% nrow()        #Data from Census FTP site has 73,745 tracts
-job_loss_wide %>% nrow()   #Lodes data has 72,738 tracts
+# read in tract geography
+my_tracts <- st_read("data/processed-data/tracts.geojson") %>% 
+  mutate_if(is.factor, as.character) %>% 
+  # filter out tracts in Puerto Rico
+  filter(!startsWith(GEOID, "72")) %>% 
+  # filter out tracts that are only water
+  filter(substr(GEOID, 6, 7) != "99")
 
-#CD: correct. Ajjit and i discussed, he will look into if this is a problem 
-# Below i flagged 100 tracts in my_tracts that are not in job_loss_wide: 99 are water tracts that are formatted with "XXXXX99XXXX" 
-# see https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2017/TGRSHP2017_TechDoc_Ch3.pdf
-# the only other one is 12086981000, which has a population of 62 people, estimated. I propose we just filter it out
-
-#CD: below (ajjit's code to download my_tracts from tigris) creates same thing as my_tracts except with some extra territories
-
-# us = fips_codes %>%
-#   filter(!state_code%in% c(74)) %>%
-#   pull(state_code) %>%
-#   unique()
-# 
-# options(use_tigris_cache = FALSE)
-# all_tracts <- reduce(
-#   map(us, function(x) {
-#     tigris::tracts(
-#             class = "sf",
-#             state = x,
-#             cb = TRUE,
-#             year = 2018,
-#             refresh = TRUE)
-#   }),
-#   rbind
-# )
-
-
-#read in tract geography
-my_tracts <- st_read("data/processed-data/tracts.geojson")
-
-#join data to tract spatial information
+# join data to tract spatial information
 job_loss_wide_sf <- left_join(my_tracts %>% select(GEOID), 
                               job_loss_wide, 
                               by = c("GEOID" = "trct")) 
 
-#filter out puerto rico 
-job_loss_wide_sf_1 <- job_loss_wide_sf %>%
-  filter(!startsWith(GEOID, "72"))
+# The 2018 Census tract file has one tract not found in the LODES data
+# This is tract 12086981000 near Miami Beach in Florida & has a population 
+# of 62. For now we exlcude this tract from the analysis
+job_loss_wide_sf <- job_loss_wide_sf %>% 
+                    filter(GEOID != "12086981000")
+
+# Check that the tracts contianed in job_loss_wide are the same after
+# adding spatial info
+assert("job_loss_wide_sf has a different number of rows that job_loss_wide",
+       nrow(job_loss_wide_sf) == nrow(job_loss_wide))
+assert("job_loss_wide_sf has differnt GEOIDS compared to job_loss_wide",
+       all.equal(job_loss_wide %>% 
+         arrange(trct) %>% 
+         pull(trct),
+       job_loss_wide_sf %>% 
+         arrange(GEOID) %>% 
+         pull(GEOID)))
 
 
-#check how many tracts are in spatial data but not our data
-sum(is.na(job_loss_wide_sf_1$X000))
+#----Write out job loss estimates for tracts-----------------------------------
 
-#filter out water tracts 
-job_loss_wide_sf_2<- filter(job_loss_wide_sf_1, substr(GEOID, 6, 7) != "99")
-
-#check how many tracts are in spatial data but not our data
-sum(is.na(job_loss_wide_sf_2$X000))
-
-#not sure what's going on in this tract, but has a population of only 62. 
-
-
-#round jobs by industry at the .1 level, full index at the integer level
-job_loss_wide_sf_3 <- job_loss_wide_sf_2 %>% 
-  mutate_at(.vars = vars(X01:X20), ~round(., digits = 1)) %>% 
-  mutate(X000 = round(X000)) %>% 
-  filter(!is.na(X000))
-
-
-#remove geojson file and write out
-remove_and_write <- function(sf_data, geo_file_name){
-  
-  if(file.exists(geo_file_name)){
-    file.remove(geo_file_name)
-  }
-  
-  #write out data
-  sf_data %>%
-    st_write(geo_file_name)
-  
-}
-
-#remove extreaneous variables and write out
-#job_loss_by_tract.geojson which is list of all tracts,
-#thier cbsa (can be NA) and job loss estimates
+# remove extreaneous variables and write out
+# job_loss_by_tract.geojson which is list of all tracts,
+# thier cbsa (can be NA) and job loss estimates by sector
 
 geo_file_name <- "data/processed-data/s3_final/job_loss_by_tract.geojson"
 
-job_loss_wide_sf_3 %>%
+job_loss_wide_sf %>%
   select(-c(county_fips, 
             county_name,
             cbsa_name)) %>% 
-  remove_and_write(geo_file_name)
+  st_write(geo_file_name, delete_dsn = TRUE)
 
 
-#create directories for smaller geojson writeouts
+#create directories for smaller geojson writeouts by county and cbsa
 if(!dir.exists("data/processed-data/s3_final/county")){
   dir.create("data/processed-data/s3_final/county")
 }
@@ -289,31 +244,32 @@ if(!dir.exists("data/processed-data/s3_final/cbsa")){
 }
 
 
-#write out geojson in smaller files. takes in three arguments: 
-#geo - either "county" or "cbsa"
-#code - the fips code of the geography
-#var_name - the name of the variable storing the fips code
+# fxn to write out geojsons for smaller geographies. Takes 3 args: 
+#   geo - either "county" or "cbsa"
+#   code - the fips code of the geography 
+#   var_name - the name of the variable storing the fips code 
+#             (either county_fips or cbsa)
 write_smaller_geojson <- function(geo, code, var_name){
 
-#get file name of file to write out    
-file_name <- paste0("data/processed-data/s3_final/", 
-         geo, 
-         "/", 
-         code, 
-         ".geojson")
-
-#filter to just the geography we want and write out the file to geojson
-  job_loss_wide_sf_3 %>%
-    filter({{var_name}} == code) %>%
-    select(-c(county_fips, 
-              county_name,
-              cbsa_name))%>%
-    remove_and_write(file_name)
+  # get file name of file to write out    
+  file_name <- paste0("data/processed-data/s3_final/", 
+           geo, 
+           "/", 
+           code, 
+           ".geojson")
+  
+  # filter to just the geography we want and write out the file to geojson
+  job_loss_wide_sf %>%
+      filter({{var_name}} == code) %>%
+      select(-c(county_fips, 
+                county_name,
+                cbsa_name))%>%
+      st_write(file_name, delete_dsn = TRUE)
 
 }
 
-#write out file to county geographies
-job_loss_wide_sf_3 %>% 
+# write out individual county job loss geojsons
+job_loss_wide_sf %>% 
   filter(!is.na(county_fips)) %>%
   pull(county_fips) %>% 
   unique() %>% 
@@ -321,8 +277,8 @@ job_loss_wide_sf_3 %>%
                               code = ., 
                               var_name = county_fips))
 
-#write out file to cbsa geographies
-job_loss_wide_sf_3 %>% 
+# write out indiviudal cbsa job loss geojsons
+job_loss_wide_sf %>% 
   filter(!is.na(cbsa)) %>%
   pull(cbsa) %>% 
   unique() %>% 
@@ -494,6 +450,11 @@ job_loss_wide_sf_3 %>%
 # write_csv(county_final, "data/processed-data/s3_final/county_job_loss.csv")
 # write_csv(cbsa_final, "data/processed-data/s3_final/cbsa_job_loss.csv")
 
+
+#----Generate job loss estimates for all counties/cbsa's------------------------------
+
+
+# Read in state, county, cbsa info for appending more detailed names
 my_states <- st_read("data/raw-data/big/states.geojson") %>% 
   st_drop_geometry() %>% 
   transmute(state_fips = GEOID,
@@ -511,15 +472,10 @@ my_cbsas <- st_read("data/raw-data/big/cbsas.geojson") %>%
             cbsa_name = NAME)
 
 
-
-#get sums of tracts for all variables at the cbsa and county levels
-
-
-
-# create a binned category for the max to use in the on load bar charts
-# should be the max sum value of any industry in the county/cbsa, but relatively standardized
-# function takes in a grouped dataframe (by the geography) and finds the max job loss in any industry,
+# function takes in a grouped dataframe (by the geography) and finds the 
+# max job loss in any industry,
 # setting bins right now at 100, 250, 500, 750, 1000, 2000, 5000, and max value
+# These maximum values are used to decide scale in bar charts for data viz
 
 add_bins <- function(data, group){
   data %>% 
@@ -550,71 +506,72 @@ add_bins <- function(data, group){
 
 
 
-#county
-county_sums <-job_loss_wide_sf_3 %>% 
+# Get total industry job losses in each county
+county_sums <- job_loss_wide_sf %>% 
   st_drop_geometry() %>% 
   filter(!is.na(county_fips)) %>%
   group_by(county_fips) %>% 
-  #add_bins() %>%
   select(-c(GEOID, 
             cbsa,
             cbsa_name,
             county_name)) %>%
-  #note: this calculates the median of `max`` as well, but `max` should all be one unique value anyway
+  # sum job loss in each industry 
   summarise_all(~sum(.)) %>% 
-  #add max related to bins
+  # add max job loss in any industry as a binned max variable
   add_bins(county_fips) %>% 
-  #join to counties
-  left_join(x = my_counties, y = ., by = "county_fips" ) %>% 
-  #reorder
+  # join to counties
+  left_join(my_counties, by = "county_fips" ) %>% 
+  # convert back to sf object
+  st_sf() %>% 
+  # reorder columns
   select(county_fips, county_name, state_name, everything()) %>% 
-  #keep only rows with data
-  filter(!is.na(X000)) 
 
 
 
 
-#cbsa
-cbsa_sums <-job_loss_wide_sf_3 %>% 
+# Get total industry job losses in each cbsa
+cbsa_sums <-job_loss_wide_sf %>% 
   st_drop_geometry() %>% 
   filter(!is.na(cbsa)) %>%
   mutate(cbsa = as.character(cbsa)) %>%
   group_by(cbsa) %>% 
- 
+  
   select(-c(GEOID, 
             county_fips,
             county_name, 
             cbsa_name)) %>%
   summarise_all(~sum(.))  %>% 
-  #add max bins
+  # add max job loss in any industry as a binned max variable
   add_bins(cbsa) %>%
-  #join to cbsas
-  left_join(x = my_cbsas, y = ., by = "cbsa") %>%
-  #reorder
-  select(cbsa, cbsa_name, everything()) %>%
-  #keep only rows with data
-  filter(!is.na(X000)) 
+  # join to cbsas
+  left_join(my_cbsas, by = "cbsa") %>%
+  # convert back to sf object
+  st_sf() %>% 
+  # reorder columns
+  select(cbsa, cbsa_name, everything()) 
 
 
+#----Write out job loss estimates for all counties/cbsa's------------------------------
 
-#-----
 
+st_write(county_sums, "data/processed-data/s3_final/sum_job_loss_county.geojson", delete_dsn = TRUE)
+st_write(cbsa_sums, "data/processed-data/s3_final/sum_job_loss_cbsa.geojson", delete_dsn = TRUE)
 
-remove_and_write(county_sums, "data/processed-data/s3_final/sum_job_loss_county.geojson")
-remove_and_write(cbsa_sums, "data/processed-data/s3_final/sum_job_loss_cbsa.geojson")
-
-#write to csv
+# write to csv
 county_sums %>% 
   st_drop_geometry() %>%
 write_csv("data/processed-data/s3_final/sum_job_loss_county.csv") 
 
-#write to csv
+# write to csv
 cbsa_sums %>% 
   st_drop_geometry() %>%
   write_csv("data/processed-data/s3_final/sum_job_loss_cbsa.csv") 
 
-#get us medians and write out
-us_sums <- job_loss_wide_sf_3 %>% 
+
+
+#----Calculate and write out job loss estimates for whole US------------------------------
+
+us_sums <- job_loss_wide_sf %>% 
   st_drop_geometry() %>% 
   select(-c(GEOID, 
             county_fips,
