@@ -4,6 +4,7 @@
 library(tidyverse)
 library(jsonlite)
 library(tigris)
+library(sf)
 
 options(use_tigris_cache = T, 
         tigris_class = "sf")
