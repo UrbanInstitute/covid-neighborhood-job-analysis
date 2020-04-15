@@ -1,4 +1,4 @@
-# Estimated Low Income Job loss due to COVID-19
+# Estimating Low Income Job loss due to COVID-19
 
 This repository contains the code and data needed to estimate the number of
 low-income jobs lost to COVID-19 in every tract in the US. The scripts read in
