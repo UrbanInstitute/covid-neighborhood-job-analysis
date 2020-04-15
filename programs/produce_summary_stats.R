@@ -1,3 +1,5 @@
+# For producing summary stats/figures. We used this info
+# to make deicisons about data viz legends and breakpoints
 library(tidyverse)
 library(sf)
 library(urbnthemes)
@@ -60,8 +62,8 @@ job_loss_long %>%
   
   
   
-  #summary stats
-  #run up to `county_sums` and `cbsa_sums` line in produce-data-files
+  # summary stats
+  # run up to `county_sums` and `cbsa_sums` line in produce-data-files
   
   county_sums_long<-county_sums %>%
     janitor::clean_names() %>% 
@@ -83,7 +85,7 @@ job_loss_long %>%
     ) %>% 
     write_csv("data/processed-data/county_stats_of_sums.csv")
   
-  #summary stats
+  # summary stats
   cbsa_sums_long<-cbsa_sums %>%
     janitor::clean_names() %>% 
     select(-geometry) %>% 

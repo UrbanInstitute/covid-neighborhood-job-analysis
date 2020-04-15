@@ -1,7 +1,8 @@
-
+# For investigating the two problematic Florida tracts
 library(tidyverse)
 library(tigris)
 library(sf)
+library(mapview)
 
 fl_tracts_18 = tigris::tracts(state = "Fl", class = "sf", year = 2018, cb = TRUE)
 fl_tracts_10 = tigris::tracts(state = "FL", class = "sf", year = 2010, cb = TRUE)
@@ -20,9 +21,4 @@ fl_tracts_18_cb %>% filter(GEOID == 12086981000 | GEOID == 12057980100)
 
 
 fl_weird_trats = rbind(f1 , f2)
-
-
-f1_cb = fl_tracts_10_cb %>% filter(str_detect(GEOID10 , c("12057980100", "12086981000")))
-f2_cb = fl_tracts_18_cb %>% filter(GEOID == 12086981000 | GEOID == 12057980100)
-
 fl_weird_trats %>% mapview()
