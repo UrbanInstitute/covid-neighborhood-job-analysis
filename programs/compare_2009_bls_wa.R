@@ -28,7 +28,7 @@ unlink("data/raw-data/big/2008.q1-q4.by_area", recursive = TRUE)
 
 
 # Parameters for start month and year from which to compare job change
-start_month <- 2
+start_month <- 3
 start_year <- 2009
 
 # Read in data
