@@ -179,7 +179,7 @@ weekly_unemployment_sub <- weekly_unemployment %>%
 
 weekly_unemployment_sub <- weekly_unemployment_sub %>%
   #only keep unemp claims from last n weeks
-  select(`WK 10...116`: `WK 14...120`, lodes_var)
+  select(`WK 9`: `WK 12...118`, lodes_var)
 
 # Sum across rows to get total unemployment over past n weeks
 # Then summarize by LODES code
