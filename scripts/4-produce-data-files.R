@@ -204,7 +204,7 @@ assert("job_loss_wide_sf has differnt GEOIDS compared to job_loss_wide",
 
 #----Write out job loss estimates for tracts-----------------------------------
 
-# remove extreaneous variables and write out
+# remove extraneous variables and write out
 # job_loss_by_tract.geojson which is list of all tracts,
 # thier cbsa (can be NA) and job loss estimates by sector
 
