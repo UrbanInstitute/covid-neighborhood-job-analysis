@@ -472,11 +472,18 @@ my_cbsas <- st_read("data/raw-data/big/cbsas.geojson") %>%
             cbsa_name = NAME)
 
 
-# function takes in a data frame and a group (by the geography) and finds the 
-# max job loss in any industry for the data aggregated by the geography,
-# setting bins right now at 100, 250, 500, 750, 1000, 2000, 5000, and max value
-# These maximum values are used to decide scale in bar charts for data viz
 
+# Function to get max value of the total job loss in any industry for the data 
+# aggregated by the geography
+# INPUT:
+#   data: a dataframe of tracts
+#   group: a geography to group by (ie cbsa or county_fips)
+# OUTPUT:
+#   data: input data with a max column appended. This max column
+#         contains the binned max job loss in any industry for the data 
+#         aggregated by the geography. The bins are set now at
+#         100, 250, 500, 750, 1000, 2000, 5000, and max value.
+# These binned maximum values are used to decide scale in bar charts for data viz
 add_sum_bins <- function(data, group){
   data %>% 
     pivot_longer(cols = X01:X20, 
@@ -504,11 +511,16 @@ add_sum_bins <- function(data, group){
   
 }
 
-# function takes in a data frame and a group (by the geography) and finds the 
-# max job loss in any industry for any tract
-# setting bins right now at 100, 150, 200, 250, and 600
-# These maximum values are used to decide scale in bar charts for data viz
-
+# Function to get max value of any one tracts jobs loss in any
+# industry for the data aggregated by the geography
+# INPUT:
+#   data: a dataframe of tracts
+#   group: a geography to group by (ie cbsa or county_fips)
+# OUTPUT:
+#   data: a 2 column dataframe with the geography (cbsa or county_fips)
+#         and tmax, or the tract maximum. Tmax is a binned variable with
+#         with bins right now at 100, 150, 200, 250, and 600
+# These max binned values are used to decide scale for bar charts in data viz
 add_bins <- function(data, group){
   data %>% 
     pivot_longer(cols = X01:X20, 
@@ -526,90 +538,88 @@ add_bins <- function(data, group){
     select(-max_temp) }
 
 
-#county bins for legend - max value of tract job loss across industries
-county_bins <-job_loss_wide_sf_3 %>% 
-  #drop spatial features
+# Get max value of any 1 tracts jobs loss in any industry for 
+# each county
+county_bins <-job_loss_wide_sf %>% 
+  # drop spatial features
   st_drop_geometry() %>% 
-  #ensure no missing county fips
+  # ensure no missing county fips
   filter(!is.na(county_fips)) %>%
-  #create tract max of bins
+  # create tract max column for each county
   add_bins(county_fips)
 
-#sums data to the county level and adds the county tract bins
-county_sums <- job_loss_wide_sf_3 %>%
-  #drop spatial features
+# Sum data to the county level & add max industry job loss 
+# and max industry-tract job loss
+county_sums <- job_loss_wide_sf %>%
+  # drop spatial features
   st_drop_geometry() %>%
-  #ensure no missing counties
+  # ensure no missing counties
   filter(!is.na(county_fips)) %>%
-  #cast county as character to avoid warnings
+  # cast county as character to avoid warnings
   mutate(county_fips = as.character(county_fips)) %>% 
-  #group by the county
+  # group by the county
   group_by(county_fips) %>% 
-  #sum values
+  # aggregate industry job loss values to county
   summarise_at(.vars = vars(starts_with("X")), ~sum(.)) %>% 
-  #ungroup data
+  # ungroup data
   ungroup() %>%
-  #add max that equals the max of the sums across industries
+  # add max industry job loss for whole county
   add_sum_bins(county_fips) %>% 
-  #add tract maxes
+  # add max tract-industry job loss for whole county
   left_join(county_bins, by = "county_fips") %>%
-  #join to county spatial file
-  left_join(x = my_counties %>% mutate(county_fips = as.character(county_fips)), 
-            y = ., 
+  # join to county geographies
+  left_join(my_counties %>% 
+              mutate(county_fips = as.character(county_fips)), 
             by = "county_fips" ) %>% 
-  #reorder
-  select(county_fips, county_name, state_name, everything()) %>% 
-  #keep only rows with data
-  filter(!is.na(X000)) 
+  # cast back to sf object
+  st_sf() %>% 
+  # reorder columns
+  select(county_fips, county_name, state_name, everything()) 
+ 
 
-
-#cbsa bins for legend - max value of tract job loss across industries
-cbsa_bins <-job_loss_wide_sf_3 %>%
-  #drop spatial features
+# Get max value of any 1 tracts jobs loss in any industry for 
+# each cbsa
+cbsa_bins <-job_loss_wide_sf %>%
+  # drop spatial features
   st_drop_geometry() %>%
-  #ensure no missing cbsas
+  # ensure no missing cbsas
   filter(!is.na(cbsa)) %>%
-  #cast cbsa as character to avoid warning
+  # cast cbsa as character to avoid warning
   mutate(cbsa = as.character(cbsa)) %>%
-  #add tract maximum for bins
+  # add tract maximum for bins
   add_bins(cbsa)
 
-#sums data to the cbsa level and adds the cbsa tract bins
-cbsa_sums <- job_loss_wide_sf_3 %>% 
-  #drop spatial features
+# Sum data to the cbsa level & add max industry job loss 
+# and max industry-tract job loss 
+cbsa_sums <- job_loss_wide_sf %>% 
+  # drop spatial features
   st_drop_geometry() %>%
-  #ensure no missing cbsas
+  # ensure no missing cbsas
   filter(!is.na(cbsa)) %>%
-  #cast cbsa as character to avoid warning
+  # cast cbsa as character to avoid warning
   mutate(cbsa= as.character(cbsa)) %>% 
-  #group by the cbsa
+  # group by the cbsa
   group_by(cbsa) %>% 
-  #sum values
+  # aggregate industry job loss values to cbsa
   summarise_at(.vars = vars(starts_with("X")), ~sum(.)) %>% 
-  #add max bins
+  # add max industry job loss for whole cbsa
   add_sum_bins(cbsa) %>%
-  #add tract maxes
+  # add max max tract-industry job loss for whole cbsa
   left_join(cbsa_bins, by = "cbsa") %>% 
-  #join to cbsa spatial file
-  left_join(x = my_cbsas, y = ., by = "cbsa") %>%
-  #reorder
-  select(cbsa, cbsa_name, everything()) %>%
-  #keep only rows with data
-  filter(!is.na(X000)) 
+  # join to cbsa geographies
+  left_join(my_cbsas, by = "cbsa") %>%
+  st_sf() %>% 
+  # reorder columns
+  select(cbsa, cbsa_name, everything())
 
 
-
-
-
-#----Write out job loss estimates for all counties/cbsa's------------------------------
-
+#----Write out job loss estimates for counties/cbsa's------------------------------
 
 st_write(county_sums, "data/processed-data/s3_final/sum_job_loss_county.geojson", delete_dsn = TRUE)
 st_write(cbsa_sums, "data/processed-data/s3_final/sum_job_loss_cbsa.geojson", delete_dsn = TRUE)
 
 # write to csv
 county_sums %>% 
-  st_drop_geometry() %>%
 write_csv("data/processed-data/s3_final/sum_job_loss_county.csv") 
 
 # write to csv
