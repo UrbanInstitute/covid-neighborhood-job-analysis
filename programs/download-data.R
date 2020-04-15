@@ -31,29 +31,6 @@ state_fips <- state_fips[, 2][c(2:length(state_fips[, 2]))]
 dl <- state_fips %>% map(download_by_state)
 
 
-## Alternatively, download tract files using tigris package
-## We didn't end up using this approach as we kept having problems
-## with tigris' default cache
-# us = fips_codes %>%
-#   filter(!state_code%in% c(74)) %>%
-#   pull(state_code) %>%
-#   unique()
-# 
-# options(use_tigris_cache = FALSE)
-# all_tracts <- reduce(
-#   map(us, function(x) {
-#     tigris::tracts(
-#             class = "sf",
-#             state = x,
-#             cb = TRUE,
-#             year = 2018,
-#             refresh = TRUE)
-#   }),
-#   rbind
-# )
-
-
-
 #----Download LODES data-----------------------------------
 # Downloaded from the Urban Institute Data Catalog
 
