@@ -1,0 +1,22 @@
+lehd_var,lehd_name
+X000,Total Job Loss Index
+X01,"Agriculture, Forestry, Fishing, and Hunting"
+X02,"Mining, Quarrying, and Oil and Gas Extractions"
+X03,Utilities
+X04,Construction
+X05,Manufacturing
+X06,Wholesale Trade
+X07,Retail Trade
+X08,Transportation and Warehousing
+X09,Information
+X10,Finance and Insurance
+X11,Real Estate and Rental and Leasing
+X12,"Professional, Scientific, and Technical Services"
+X13,Management of Companies and Enterprises
+X14,Administrative and Support and Waste Management and Remediation Services
+X15,Educational Services
+X16,Health Care and Social Assistance
+X17,"Arts, Entertainment, and Recreation"
+X18,Accomodation and Food Services
+X19,Other Services
+X20,Public Administration
