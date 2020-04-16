@@ -12,7 +12,7 @@ options(use_tigris_cache = T,
 # Create output directory to place big raw-data in.
 dir.create("data/raw-data/big", showWarnings = FALSE)
 
-#----Download Census tracts ------------------------------
+#----Download Census tracts from Census FTP site ------------------------------
 
 # Census tract  geographic files
 # Tracts simplify to 1:500k, 
@@ -62,8 +62,8 @@ file.rename(from = "data/raw-data/big/2019.q1-q3.by_area/2019.q1-q3 53000 Washin
 unlink("data/raw-data/big/2019.q1-q3.by_area", recursive = TRUE)
 
 # WA state unemployment estimates, most recent
-download.file(url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week 13_2020.xlsx", 
-              destfile = "data/raw-data/big/UI claims week 13_2020.xlsx",
+download.file(url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week 14_2020.xlsx", 
+              destfile = "data/raw-data/big/UI claims week 14_2020.xlsx",
               #download file in binary mode, if you don't, xlsx file is corrupted
               mode="wb")
 
