@@ -6,7 +6,7 @@ data from Census LODES, the BLS, WA state unemployment figures, and other data
 sources to estimate the number of jobs lost in every industry for each Census
 tract in the US. The output data files of this repo power Urban's interactive
 [web app](https://www.urban.org/features/where-low-income-jobs-are-being-lost-covid-19) visualizing the estimated low income jobs that will be lost to
-COVID-19. You can view the code for creating the web application at [this]()
+COVID-19. You can view the code for creating the web application at [this](https://github.com/UrbanInstitute/covid-jobloss-feature)
 Github repo.
 
 We hope government support programs, and non-profit service providers use the
