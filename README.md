@@ -5,7 +5,7 @@ low-income jobs lost to COVID-19 in every tract in the US. The scripts read in
 data from Census LODES, the BLS, WA state unemployment figures, and other data
 sources to estimate the number of jobs lost in every industry for each Census
 tract in the US. The output data files of this repo power Urban's interactive
-[web app]() visualizing the estimated low income jobs that will be lost to
+[web app](https://www.urban.org/features/where-low-income-jobs-are-being-lost-covid-19) visualizing the estimated low income jobs that will be lost to
 COVID-19. You can view the code for creating the web application at [this]()
 Github repo.
 
@@ -84,39 +84,9 @@ child care support, or cash assistance - to those who need it most.
 
 ## Caveats
 
-* Residence Area Characteristics (RAC) data from LODES reflect the most recent
-  year of data, which is 2017 for most tracts. 2016 data are used, however, for
-  tracts within Alaska and South Dakota and for tracts inside counties that are
-  bordering South Dakota. Worker Area Characteristics (WAC) data, which is an
-  input for RAC, are not available for South Dakota and Alaska in 2017.
-  Therefore, the  tracts inside and around these two states will have
-  undercounts - for inside South Dakota and Alaska, the undercounted reflect
-  people that both work and live in the state, and for outside South Dakota, the
-  undercounted reflect people that live outside of South Dakota and work within
-  South Dakota. 
+For a complete list of caveats, see the technical appendix available from our
+[web application](https://www.urban.org/features/where-low-income-jobs-are-being-lost-covid-19).
 
-* Because data are not available related to the number of low-income job losses,
-  we estimate low-income job loss based off of the rate of job loss in
-  Washington State, or, when available, the rate of job loss at the national
-  level. These are estimates and will be different insofar as the rate of job
-  loss varies within industries among different income levels, or the rate of
-  job loss differs across geographies, which is likely as different measures
-  were implemented differently across the country. Data represent low-income
-  jobs (jobs with wages < $40,000 per year) and do not include all jobs. It is
-  possible job loss is larger (or smaller) among low-income people across
-  industries. As a result, these data are best interpreted as _relative_ levels
-  of risk of job loss. Exact numbers should be interpreted as an index and not
-  as actual jobs lost.
-
-* The LODES data we use in this analysis are sourced from administrative data,
-  primarily Unemployment Insurance wage records from states and other employment
-  surveys. As such, the data do not include some workers, including many
-  self-employed independent contractors. Federal employment is also only
-  excluded from this analysis as the series only contains data from 2010 to
-  2015. 
-
-- Our analysis excludes Census tracts in Puerto Rico, Guam, and other US
-  territories 
 ## Contact
 
 Contact Graham MacDonald at gmacdonald@urban.org
