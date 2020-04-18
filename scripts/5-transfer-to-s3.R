@@ -28,7 +28,7 @@ s3_filepath <- "data/processed-data/s3_final/"
 put_object(file = paste0(s3_filepath, "job_loss_by_tract.geojson"), 
            object = "job_loss_by_tract.geojson",
            bucket = my_bucket_name,
-           multipart = T)
+           multipart = F)
 
 # put geojson file in root directory
 put_object(file = paste0(s3_filepath, "no_cbsa_tracts.geojson"), 
@@ -46,8 +46,8 @@ put_object(file = paste0(s3_filepath, "no_cbsa_tracts.geojson"),
 #            "county_job_loss.csv",
 #            my_bucket_name)
 
-# put state geojson in bucket directory
-put_object(paste0(s3_filepath, "states.geojson"), 
+# put state geojson in root directory
+put_object(paste0("data/raw-data/big/states.geojson"), 
            "states.geojson",
            my_bucket_name)
 # 

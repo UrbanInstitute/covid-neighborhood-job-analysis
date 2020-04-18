@@ -4,6 +4,7 @@
 # load libraries
 library(tidyverse)
 library(sf)
+library(testit)
 
 #----Set Parameters----------------------------------------------------
 # choose which dataset to use ; should be either `bls` or `wa`
@@ -321,7 +322,8 @@ add_sum_bins <- function(data, group){
       max_temp > 750 & max_temp <= 1000 ~ 1000,
       max_temp > 1000 & max_temp <= 2000 ~ 2000,
       max_temp > 2000 & max_temp <= 5000 ~ 5000,
-      max_temp > 5000 ~ max_max_temp 
+      max_temp > 5000 & max_temp <= 7000 ~ 7000,
+      max_temp > 7000 ~ 200000 
     )) %>% 
     select(-c(max_temp, max_max_temp)) %>% 
     pivot_wider(names_from ="job_type", values_from = "job_loss") %>% 
@@ -352,7 +354,7 @@ add_bins <- function(data, group){
       max_temp > 100 & max_temp <= 150 ~ 150,
       max_temp > 150 & max_temp <=200 ~ 200,
       max_temp > 200 & max_temp <=250 ~ 250,
-      max_temp > 250 ~ 600,
+      max_temp > 250 ~ 700,
     )) %>% 
     select(-max_temp) }
 

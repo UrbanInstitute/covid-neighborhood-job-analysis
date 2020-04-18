@@ -11,8 +11,8 @@ library(readxl)
 # filename: filename of WA unemployment data (downloaded from 
 #           download-data.R)
 start_quarter <- 3
-past_unemployment_weeks <- 4
-filename <- "UI claims week 13_2020.xlsx"
+past_unemployment_weeks <- 5
+filename <- "UI claims week 14_2020.xlsx"
 
 
 ##----Read in data------------------------------------------------------
