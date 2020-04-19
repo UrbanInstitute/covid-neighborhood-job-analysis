@@ -58,6 +58,16 @@ child care support, or cash assistance - to those who need it most.
   and other orders happened in a staggered fashion, and the CES reports for the
   pay period includes the 12th of the previous month, we will not be using
   this data until the May BLS release.
+- **`2c-job-loss-by-industry-ny.R`**: Uses data from the New York State Department
+  of Labor, manually transcribed from PDF to `data/raw-data/small/ny-manual-input-data.xlsx`.
+  Provides estimates on a weekly baseis of unemployment claims by industry
+  supersector, just like WA state, and estimates the percent change in employment
+  for every industry. Same caveats and process as the WA state data. For how we 
+  apply it, see `2z-job-loss-by-industry-combine-states.R`.
+- **`2z-job-loss-by-industry-combine-states.R`**: Combines all states 
+  unemployment claims change data (currently WA and NY) into a single, weighted 
+  average file. We apply this weighted average to the LODES data to produce
+  better estimates. Same caveats and process as WA data.
 - **`3-produce-geo-files.R`**: Generates a few intermediary geographic files for use
   in analysis, including:
     - single geojson of all tracts in the US
@@ -66,8 +76,9 @@ child care support, or cash assistance - to those who need it most.
 - **`4-produce-data-files.R`**: Generates estimates of job loss by tract using 2017
   LODES data from the [Urban Institute Data
   Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes),
-  and unemployment rates by industry generated in script `2a` or `2b`. This file
-  produces the main outputs used in the interactive data viz, including:
+  and unemployment rates by industry generated in script `2a` (initial run), `2z` 
+  (subsequent updates in April) or `2b` (subsequent updates in May and beyond). 
+  This file produces the main outputs used in the interactive data viz, including:
     -  `job_loss_by_tract.geojson`: Estimated job losses by industry for every
        tract in the US
     - `sum_job_loss_county.geojson`: Estimated job losses by industry for every
