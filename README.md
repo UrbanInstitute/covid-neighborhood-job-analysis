@@ -64,10 +64,17 @@ child care support, or cash assistance - to those who need it most.
   supersector, just like WA state, and estimates the percent change in employment
   for every industry. Same caveats and process as the WA state data. For how we 
   apply it, see `2z-job-loss-by-industry-combine-states.R`.
-- **`2z-job-loss-by-industry-combine-states.R`**: Combines all states 
+- **`2y-job-loss-by-industry-combine-states.R`**: Combines all states 
   unemployment claims change data (currently WA and NY) into a single, weighted 
   average file. We apply this weighted average to the LODES data to produce
   better estimates. Same caveats and process as WA data.
+- **`2z-job-loss-by-industry-by-state.R`**: Uses the job loss by industry file
+  to calculate job losses by industry by state. State level totals and job loss 
+  calculations come from the BLS advance weekly claims for the previous weeks, 
+  divided by the BLS QCEW data, to ensure we are using similar data as comparisons 
+  across files. A ratio of job loss in the state compared to job loss as a whole
+  in the industry file is applied for each state to the industry estimates to
+  produce a job loss by industry by state file.
 - **`3-produce-geo-files.R`**: Generates a few intermediary geographic files for use
   in analysis, including:
     - single geojson of all tracts in the US

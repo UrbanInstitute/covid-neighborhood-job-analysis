@@ -31,6 +31,17 @@ file.rename(from = "data/raw-data/big/2019.q1-q3.by_area/2019.q1-q3 36000 New Yo
 
 unlink("data/raw-data/big/2019.q1-q3.by_area", recursive = TRUE)
 
+# BLS QCEW data by state
+
+download.file(url = "https://data.bls.gov/cew/data/files/2019/xls/2019_all_county_high_level.zip",
+              destfile = "data/raw-data/big/us_qcew.zip")
+unzip("data/raw-data/big/us_qcew.zip",
+      files = c("allhlcn193.xlsx"),
+      exdir = "data/raw-data/big")
+file.remove("data/raw-data/big/us_qcew.zip")
+file.rename(from = "data/raw-data/big/allhlcn193.xlsx",
+            to = "data/raw-data/big/us_qcew.xlsx")
+
 # WA state unemployment estimates, most recent
 # Needs manual update (increase week # by 1)
 download.file(url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week 14_2020.xlsx", 
