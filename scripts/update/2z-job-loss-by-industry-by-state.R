@@ -25,6 +25,10 @@ state_claims <- read_excel(str_glue("data/raw-data/small/{filename}"),
 # Read in national industry estimates
 national_industry_est <- read_csv("data/processed-data/job_change_all_states_most_recent.csv")
 
+# Read in FIPS codes
+fips_codes <- read_excel("data/raw-data/big/fips.xlsx",
+                         sheet = "nationalpluspr_17",
+                         skip = 4)
 
 ##----Create state job loss figures-------------------------------------
 # Get total employment from QCEW
@@ -56,6 +60,7 @@ national_job_loss_calc <- national_industry_est %>%
   mutate(percent_change_employment = -unemp_tot / tot_emp) %>%
   select(percent_change_employment) %>%
   pull()
+
 # Function that takes state as input, and returns a dataframe with the
 # state's job loss by industry estimates
 # input: state, string
@@ -73,7 +78,16 @@ create_state_estimates <- function(st){
   state_industry_est
 }
 
+# Filter FIPS
+fips_ready <- fips_codes %>%
+  filter(`Summary Level` == "040") %>%
+  rename(state_fips = `State Code (FIPS)`, 
+         state = `Area Name (including legal/statistical area description)`) %>%
+  select(state, state_fips)
+
+# Merge and Write
 state_job_estimates <- state_job_loss$state %>% 
   map(create_state_estimates) %>%
   bind_rows() %>%
+  left_join(fips_ready, by = "state") %>%
   write_csv("data/processed-data/state_job_change_all_states_most_recent.csv")
