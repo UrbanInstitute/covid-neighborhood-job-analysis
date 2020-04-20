@@ -1,6 +1,13 @@
 library(tidyverse)
 library(sf)
 
+
+#----Set parameters-------------------------------------------
+# Set max bin values after evaluating histograms in S3
+tmax_bins = c(100, 150, 200, 250, 700)
+max_bins = c(100, 250, 500, 750, 1000, 2000, 5000, 70000, 200000)
+
+
 #----Generate job loss estimates for all counties/cbsa's------------------------------
 
 
@@ -47,15 +54,15 @@ add_sum_bins <- function(data, group){
     mutate(max_max_temp = max(max_temp)) %>% 
     group_by({{group}}) %>% 
     mutate(max = case_when(
-      max_temp <=100 ~ 100,
-      max_temp > 100 & max_temp <= 250 ~ 250,
-      max_temp > 250 & max_temp <=500 ~ 500,
-      max_temp > 500 & max_temp <=750 ~ 750,
-      max_temp > 750 & max_temp <= 1000 ~ 1000,
-      max_temp > 1000 & max_temp <= 2000 ~ 2000,
-      max_temp > 2000 & max_temp <= 5000 ~ 5000,
-      max_temp > 5000 & max_temp <= 7000 ~ 7000,
-      max_temp > 7000 ~ 200000 
+      max_temp <= max_bins[1] ~ max_bins[1],
+      max_temp > max_bins[1] & max_temp <= max_bins[2] ~ max_bins[2],
+      max_temp > max_bins[2] & max_temp <=max_bins[3] ~ max_bins[3],
+      max_temp > max_bins[3] & max_temp <=max_bins[4] ~ max_bins[4],
+      max_temp > max_bins[4] & max_temp <= max_bins[5] ~ max_bins[5],
+      max_temp > max_bins[5] & max_temp <= max_bins[6] ~ max_bins[6],
+      max_temp > max_bins[6] & max_temp <= max_bins[7] ~ max_bins[7],
+      max_temp > max_bins[7] & max_temp <= max_bins[8] ~ max_bins[8],
+      max_temp > max_bins[8] ~ max_bins[9] 
     )) %>% 
     select(-c(max_temp, max_max_temp)) %>% 
     pivot_wider(names_from ="job_type", values_from = "job_loss") %>% 
@@ -82,11 +89,11 @@ add_bins <- function(data, group){
     group_by({{group}}) %>% 
     summarise(max_temp = max(job_loss)) %>% 
     mutate(tmax = case_when(
-      max_temp <=100 ~ 100,
-      max_temp > 100 & max_temp <= 150 ~ 150,
-      max_temp > 150 & max_temp <=200 ~ 200,
-      max_temp > 200 & max_temp <=250 ~ 250,
-      max_temp > 250 ~ 700,
+      max_temp <= tmax_bins[1] ~ tmax_bins[1],
+      max_temp > tmax_bins[1] & max_temp <= tmax_bins[2] ~ tmax_bins[2],
+      max_temp > tmax_bins[2] & max_temp <= tmax_bins[3] ~ tmax_bins[3],
+      max_temp > tmax_bins[3] & max_temp <= tmax_bins[4] ~ tmax_bins[4],
+      max_temp > tmax_bins[4] ~ tmax_bins[5],
     )) %>% 
     select(-max_temp) }
 
