@@ -1,3 +1,6 @@
+library(tidyverse)
+library(sf)
+
 #----Generate job loss estimates for all counties/cbsa's------------------------------
 
 
@@ -7,18 +10,12 @@ my_states <- st_read("data/raw-data/big/states.geojson") %>%
   transmute(state_fips = GEOID,
             state_name = NAME)
 
-my_counties_no_cb <- st_read("data/raw-data/big/counties_no_cb.geojson") %>% 
-  st_drop_geometry() %>% 
-  transmute(county_fips= as.character(GEOID),
-         county_name = NAMELSAD)
-
 my_counties <- st_read("data/raw-data/big/counties.geojson") %>% 
   transmute(county_fips = as.character(GEOID),
-            state_fips = STATEFP) %>% 
+            state_fips = STATEFP,
+            county_name = NAME) %>% 
   left_join(my_states, "state_fips") %>% 
-  select(-state_fips) %>% 
-  left_join(my_counties_no_cb, by = "county_fips")
-
+  select(-state_fips)
  
 my_cbsas <- st_read("data/raw-data/big/cbsas.geojson") %>% 
   transmute(cbsa =  as.character(GEOID),

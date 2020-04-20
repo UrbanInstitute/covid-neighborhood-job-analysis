@@ -38,6 +38,9 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# VS Code Environment Variables
+/.vscode/*
+
 # pkgdown site
 docs/
 

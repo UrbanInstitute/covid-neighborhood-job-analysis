@@ -45,22 +45,31 @@ download.file(url = "https://urban-data-catalog.s3.amazonaws.com/drupal-root-liv
 
 #----Download cbsas, counties, and states from tigris------------
 
+my_states <- states(cb = T) 
 my_cbsas<-core_based_statistical_areas(cb = T)
 my_counties <- counties(cb = T)
 my_counties_no_cb <- counties(cb = F)
-my_states <- states(cb = T) 
+
+# The CB (cartographic boundary files used for smoother mapping boundaries) 
+# version of the tracts file doesn't have the full county name. So we pull the 
+# non-cb version of the counteis file and left join the full county name.
+
+my_counties = my_counties %>%
+  left_join(my_counties_no_cb %>% 
+              select(GEOID, NAMELSAD) %>% 
+              st_drop_geometry, by = "GEOID") %>% 
+  select(-NAME) %>% 
+  rename(NAME = NAMELSAD)
+
 
 clean_and_write_sf <- function(name, filepath) {
-  if(!file.exists(filepath)){
     name %>% 
       st_transform(4326) %>%
       st_write(., filepath, delete_dsn = TRUE)
-  }
 }
 
 dir.create("data/processed-data/s3_final", showWarnings = FALSE)
 
 clean_and_write_sf(my_cbsas,  "data/raw-data/big/cbsas.geojson")
 clean_and_write_sf(my_counties, "data/raw-data/big/counties.geojson")
-clean_and_write_sf(my_counties_no_cb, "data/raw-data/big/counties_no_cb.geojson")
 clean_and_write_sf(my_states, "data/raw-data/big/states.geojson")
