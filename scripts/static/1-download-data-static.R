@@ -6,7 +6,7 @@ library(jsonlite)
 library(tigris)
 library(sf)
 
-options(use_tigris_cache = T, 
+options(use_tigris_cache = T,
         tigris_class = "sf")
 
 # Create output directory to place big raw-data in.
@@ -15,7 +15,7 @@ dir.create("data/raw-data/big", showWarnings = FALSE)
 #----Download Census tracts from Census FTP site ------------------------------
 
 # Census tract  geographic files
-# Tracts simplify to 1:500k, 
+# Tracts simplify to 1:500k,
 # Census tract (2010)
 
 download_by_state <- function(state) {
