@@ -7,9 +7,11 @@ library(sf)
 library(testit)
 
 #----Set Parameters----------------------------------------------------
-# choose which dataset to use ; should be either `bls` or `wa`
+# choose which dataset to use ; should be either `bls`, `wa`, `ny`, or `all_states`
 dataset <- "wa"
 
+
+#----Read in Data----------------------------------------------------
 
 # read in industry to lodes xwalk, to put names to lodes industries
 lehd_types <- read_csv("data/raw-data/small/lehd_types.csv")
