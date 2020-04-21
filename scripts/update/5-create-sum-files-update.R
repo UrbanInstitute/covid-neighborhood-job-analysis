@@ -1,7 +1,7 @@
 library(tidyverse)
 library(sf)
 library(jsonlite)
-
+library(purrr)
 
 #----Set parameters-------------------------------------------
 # Set max bin values after evaluating histograms in S3
@@ -209,28 +209,34 @@ us_sums <- job_loss_wide_sf %>%
 us_sums %>% write_csv("data/processed-data/s3_final/sum_job_loss_us.csv")
 
 
-vs <- us_sums %>%
-  select(starts_with("X0"), -X000) %>%
+#----Write out reshaped JSONS for D3 viz ------------------------------
+
+us_df_reshaped <- us_sums %>%
+  select(starts_with("X"), -X000) %>%
   pivot_longer(cols = everything(), names_to = "k", values_to = "v") %>%
-  toJSON()
+  as.data.frame()
 
+us_d3_list <- list(`99` = list(t = us_sums$X000, vs = us_df_reshaped)) %>%
+  toJSON(auto_unbox = T)
 
-tibble(
-  t = us_sums$X000,
-  vs = vs
+county_d3_list <- map(county_sums$county_fips,
+  get_d3_list,
+  df = county_sums,
+  geoid_var = county_fips
 ) %>%
-  jsonlite::toJSON(dataframe = "columns")
+  # Need to flatten one level to match list structure of JSON that D3 wants
+  purrr::flatten() %>%
+  jsonlite::toJSON(auto_unbox = T)
 
+cbsa_d3_list <- map(cbsa_sums$cbsa,
+  get_d3_list,
+  df = cbsa_sums,
+  geoid_var = cbsa
+) %>%
+  # Need to flatten one level to match list structure of JSON that D3 wants
+  purrr::flatten() %>%
+  jsonlite::toJSON(auto_unbox = T)
 
-tibble(t = us_sums$X000, vs = vs) %>%
-  jsonlite::toJSON()
-
-
-for (i in k) {
-
-}
-
-lapply(k, get)
-
-
-list(list(k, v))
+write(county_d3_list, "data/processed-data/s3_final/sum_job_loss_county_reshaped.json")
+write(cbsa_d3_list, "data/processed-data/s3_final/sum_job_loss_cbsa_reshaped.json")
+write(us_d3_list, "data/processed-data/s3_final/sum_job_loss_us.json")

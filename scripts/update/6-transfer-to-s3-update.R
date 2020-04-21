@@ -77,3 +77,22 @@ put_object(
     "sum_job_loss_us.csv",
     my_bucket_name
 )
+
+# put reshaped jsons in root directory
+put_object(
+    file = paste0(s3_filepath, "sum_job_loss_county_reshaped.json"),
+    "reshaped/sum_job_loss_county_reshaped.json",
+    my_bucket_name
+)
+
+put_object(
+    file = paste0(s3_filepath, "sum_job_loss_cbsa_reshaped.json"),
+    "reshaped/sum_job_loss_cbsa_reshaped.json",
+    my_bucket_name
+)
+
+put_object(
+    file = paste0(s3_filepath, "sum_job_loss_us.json"),
+    "reshaped/sum_job_loss_us.json",
+    my_bucket_name
+)
