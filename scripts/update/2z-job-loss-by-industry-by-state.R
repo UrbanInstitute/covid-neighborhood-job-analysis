@@ -6,12 +6,13 @@ library(readxl)
 library(testit)
 
 ##----Set Parameters----------------------------------------------------
-# start_quarter: quarter from which to compare job change and
 # past_unemp_weeks: # of past weeks of unemployment data to use
 # filename: filename of WA unemployment data (downloaded from
 #           download-data.R)
+# is_bls: Using state data or BLS data for industry data
 past_unemployment_weeks <- 4
 filename <- "initial-claims-bls-state.xlsx"
+is_bls <- FALSE
 
 ##----Read in data------------------------------------------------------
 # Read in BLS QCEW data
@@ -61,6 +62,18 @@ national_job_loss_calc <- national_industry_est %>%
   select(percent_change_employment) %>%
   pull()
 
+# Calculate the factor to adjust WA, NY, etc. to national job loss
+if (!is_bls){
+  national_job_loss_factor <- state_job_loss %>%
+    summarise(unemployment_totals = sum(unemployment_totals),
+              total_employment = sum(total_employment)) %>%
+    mutate(percent_change_employment = -unemployment_totals / total_employment) %>%
+    select(percent_change_employment) %>%
+    pull()
+}
+
+national_job_loss_calc_ratio <- national_job_loss_factor / (national_job_loss_calc**2)
+
 # Function that takes state as input, and returns a dataframe with the
 # state's job loss by industry estimates
 # input: state, string
@@ -70,7 +83,7 @@ create_state_estimates <- function(st){
     filter(state == st) %>%
     select(percent_change_employment) %>%
     pull()
-  state_job_loss_constant <- state_job_loss_calc / national_job_loss_calc
+  state_job_loss_constant <- state_job_loss_calc * national_job_loss_calc_ratio
   state_industry_est <- national_industry_est %>%
     mutate(factor = state_job_loss_constant,
            percent_change_employment_st = state_job_loss_constant * percent_change_employment,
