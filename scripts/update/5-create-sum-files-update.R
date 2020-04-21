@@ -5,7 +5,7 @@ library(sf)
 #----Set parameters-------------------------------------------
 # Set max bin values after evaluating histograms in S3
 tmax_bins = c(100, 150, 200, 250, 700)
-max_bins = c(100, 250, 500, 750, 1000, 2000, 5000, 70000, 200000)
+max_bins = c(100, 250, 500, 750, 1000, 2000, 5000, 7000, 200000)
 
 
 #----Generate job loss estimates for all counties/cbsa's------------------------------

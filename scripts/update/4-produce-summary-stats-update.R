@@ -7,7 +7,7 @@ library(aws.s3)
 set_urbn_defaults()
 ## Set Parameters ---------------------------------
 tmax_bins = c(100, 150, 200, 250, 700)
-max_bins = c(100, 250, 500, 750, 1000, 2000, 5000, 70000, 200000)
+max_bins = c(100, 250, 500, 750, 1000, 2000, 5000, 7000, 200000)
 
 # Create output directory for summary stats
 dir.create("data/processed-data/s3_final/summary_stats", showWarnings = FALSE)
@@ -95,7 +95,7 @@ create_max_histogram <- function(data, group, title, zoomed = F){
     lines = max_bins[max_bins < quantile_95]
     lines_df = data_frame(lines = lines,
                           lines_chr = as.character(lines))
-    
+
     plot = data_maxes %>%
       filter(max_temp < quantile_95)%>% 
       ggplot() + 
@@ -109,7 +109,7 @@ create_max_histogram <- function(data, group, title, zoomed = F){
                               y = 0,
                               label = lines_chr,
                               hjust = 1,
-                              vjust = 1, 
+                              vjust = 1,
                               angle = 90,
                               ),
                 color = palette_urbn_magenta[5],
@@ -128,7 +128,7 @@ create_max_histogram <- function(data, group, title, zoomed = F){
       ggplot() + 
       geom_histogram(mapping= aes(max_temp), bins = 1000) + 
       scale_x_continuous(limits = c(0, max_tick_value),
-                         breaks = seq(0, max_tick_value, 12000)) +
+                         breaks = seq(0, max_tick_value, 40000)) +
       geom_vline(xintercept = max_bins, 
                  linetype = "dashed",
                  color = palette_urbn_magenta[5],
@@ -141,6 +141,7 @@ create_max_histogram <- function(data, group, title, zoomed = F){
                               angle = 90,
       ),
       color = palette_urbn_magenta[5],
+      size = 2,
       data = lines_df) +
       labs(title = paste0(title, " (max: ", round(max(data_maxes$max_temp)), ")"))
   }
@@ -150,22 +151,29 @@ create_max_histogram <- function(data, group, title, zoomed = F){
 
 county_sums %>% 
   create_max_histogram(county_fips,"Max County-Industry job loss", zoomed = F)
-ggsave("data/processed-data/s3_final/summary_stats/max_county_industry_hist.png")
+ggsave("data/processed-data/s3_final/summary_stats/max_county_industry_hist.png",
+        width = 9, height = 7, units = "in")
 
 
 cbsa_sums %>% 
   create_max_histogram(cbsa, "Max CBSA-Industry job loss", zoomed = F)
-ggsave("data/processed-data/s3_final/summary_stats/max_cbsa_industry_hist.png")
+ggsave("data/processed-data/s3_final/summary_stats/max_cbsa_industry_hist.png",
+  width = 9, height = 7, units = "in"
+)
 
 
 county_sums %>% 
   create_max_histogram(county_fips,"Max County-Industry job loss", zoomed = T)
-ggsave("data/processed-data/s3_final/summary_stats/max_county_industry_hist_zoomed.png")
+ggsave("data/processed-data/s3_final/summary_stats/max_county_industry_hist_zoomed.png",
+  width = 9, height = 7, units = "in"
+)
 
 
 cbsa_sums %>% 
   create_max_histogram(cbsa, "Max CBSA-Industry job loss", zoomed = T)
-ggsave("data/processed-data/s3_final/summary_stats/max_cbsa_industry_hist_zoomed.png")
+ggsave("data/processed-data/s3_final/summary_stats/max_cbsa_industry_hist_zoomed.png",
+  width = 9, height = 7, units = "in"
+)
 
 
 
