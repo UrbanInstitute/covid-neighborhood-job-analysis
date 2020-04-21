@@ -75,7 +75,6 @@ if (!is_bls){
   national_job_loss_calc_ratio <- 1 / national_job_loss_calc
 }
 
-
 # Function that takes state as input, and returns a dataframe with the
 # state's job loss by industry estimates
 # input: state, string
@@ -100,9 +99,30 @@ fips_ready <- fips_codes %>%
          state = `Area Name (including legal/statistical area description)`) %>%
   select(state, state_fips)
 
-# Merge and Write
+# Merge
 state_job_estimates <- state_job_loss$state %>% 
   map(create_state_estimates) %>%
   bind_rows() %>%
-  left_join(fips_ready, by = "state") %>%
+  left_join(fips_ready, by = "state") 
+
+if (!is_bls){
+  # Replace WA and NY with actuals
+  wa <- read_csv("data/processed-data/job_change_wa_most_recent.csv")
+  ny <- read_csv("data/processed-data/job_change_ny_most_recent.csv")
+  replace_state <- function(st_name, st_fips, df){
+    temp_state <- df %>%
+      mutate(state_fips = st_fips, state = st_name,
+             percent_change_employment_st = percent_change_employment,
+             factor = 1)
+    temp_state_job_estimates <- state_job_estimates %>%
+      filter(state_fips != st_fips) %>%
+      rbind(temp_state)
+    temp_state_job_estimates
+  }
+  state_job_estimates <- replace_state("Washington", "53", wa)
+  state_job_estimates <- replace_state("New York", "36", ny)
+}
+
+# Write
+state_job_estimates %>%
   write_csv("data/processed-data/state_job_change_all_states_most_recent.csv")
