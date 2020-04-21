@@ -105,6 +105,8 @@ child care support, or cash assistance - to those who need it most.
 For a complete list of caveats, see the technical appendix available from our
 [web application](https://www.urban.org/features/where-low-income-jobs-are-being-lost-covid-19).
 
+See [changelog.md](https://github.com/UrbanInstitute/covid-neighborhood-job-analysis/blob/master/changelog.md) for recent changes and updates.
+
 ## Contact
 
 Contact Graham MacDonald at gmacdonald@urban.org
