@@ -55,8 +55,14 @@ download.file(
 
 #----Download cbsas, counties, and states from tigris------------
 
-my_states <- states(cb = T)
-my_cbsas <- core_based_statistical_areas(cb = T)
+# FIPS codes
+download.file(url = "https://www2.census.gov/programs-surveys/popest/geographies/2017/all-geocodes-v2017.xlsx",
+              destfile = "data/raw-data/big/fips.xlsx",
+              mode = "wb")
+
+my_states <- states(cb = T) 
+my_cbsas<-core_based_statistical_areas(cb = T)
+
 my_counties <- counties(cb = T)
 my_counties_no_cb <- counties(cb = F)
 
