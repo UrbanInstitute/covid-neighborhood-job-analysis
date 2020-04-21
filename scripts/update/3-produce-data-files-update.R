@@ -1,6 +1,8 @@
 # Creates the data files at the Census tract level using 2017 LODES data,
 # subtracting jobs over 40k from all jobs. BLS or Washington unemployment data is available.
-
+source("c:\\Users\\anarayanan\\Documents\\GitHub\\covid-neighborhood-job-analysis\\scripts\\update\\4-produce-summary-stats-update.R", encoding = "UTF-8")
+source("c:\\Users\\anarayanan\\Documents\\GitHub\\covid-neighborhood-job-analysis\\scripts\\update\\5-create-sum-files-update.R", encoding = "UTF-8")
+source("c:\\Users\\anarayanan\\Documents\\GitHub\\covid-neighborhood-job-analysis\\scripts\\tests\\check_updated_county_cbsa_sums.R", encoding = "UTF-8")
 # load libraries
 library(tidyverse)
 library(sf)
@@ -135,7 +137,7 @@ job_loss_wide_sf %>%
   )) %>%
   # round jobs by industry to 0.1 (to decrease output file size)
   mutate_at(.vars = vars(X01:X20), ~ round(., digits = 1)) %>%
-  # round total jobs lost to integer for reader
+  # round total jobs lost to nearest integer
   # for reader understandability (What is 1.3 jobs?)
   mutate(X000 = round(X000)) %>%
   # write out geography
@@ -146,6 +148,9 @@ job_loss_wide_sf %>%
   # Since this is only for Data Catalog, we include extra county columns
   # round jobs by industry to 0.1 (to decrease output file size)
   mutate_at(.vars = vars(X01:X20), ~ round(., digits = 1)) %>%
+  # round total jobs lost to nearest integer
+  # for reader understandability (What is 1.3 jobs?)
+  mutate(X000 = round(X000)) %>%
   # Drop geometry for smaller file sizes
   st_drop_geometry() %>%
   # round total jobs lost to integer for reader
