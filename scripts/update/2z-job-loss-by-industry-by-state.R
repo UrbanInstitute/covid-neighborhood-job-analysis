@@ -70,9 +70,11 @@ if (!is_bls){
     mutate(percent_change_employment = -unemployment_totals / total_employment) %>%
     select(percent_change_employment) %>%
     pull()
+  national_job_loss_calc_ratio <- national_job_loss_factor / (national_job_loss_calc**2)
+} else {
+  national_job_loss_calc_ratio <- 1 / national_job_loss_calc
 }
 
-national_job_loss_calc_ratio <- national_job_loss_factor / (national_job_loss_calc**2)
 
 # Function that takes state as input, and returns a dataframe with the
 # state's job loss by industry estimates
