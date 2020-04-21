@@ -27,19 +27,25 @@ child care support, or cash assistance - to those who need it most.
 ## Directory Structure
 
 - `scripts/` stores the relevant scripts
+  - `static/`: scripts that need to be run once when the repo is cloned
+  - `dynamic/`: scripts that need to be run every time the underlying employment
+    data from BLS or individual states are updated. We will update the data once
+    a week on Thursdays until the May BLS release, after which we will update
+    the data monthly in line with BLS data updates.
 - `data/` stores the data
   - `raw-data/` stores raw data.
     - `small/` stores data that can be pushed to Github. All manually compiled
       data needed to run the scripts are here
     - `big/` stores data that can't be pushed to Github, but will be downloaded in
       through `1-download-data.R`
-  - `processed-data/` stores processed data, none of which will be written to Github
+  - `processed-data/` stores processed data which are outputted from the
+    scripts, none of which will be written to Github
 
 
 ## Description of Scripts
 
 - **`1-download-data.R`**: Downloads the relevant Census geographies, BLS data,
-  LODES data,and WA state unemployment data to the `data/raw-data/big/` folder.
+  LODES data,and WA/NY state unemployment data to the `data/raw-data/big/` folder.
 - **`2a-job-loss-by-industry-wa.R`**: Uses data from the Washington State
   Employment Security Department - which provides estimates on a weekly basis of
   unemployment claims by industry supersector - to estimate the percent change
@@ -60,7 +66,7 @@ child care support, or cash assistance - to those who need it most.
   this data until the May BLS release.
 - **`2c-job-loss-by-industry-ny.R`**: Uses data from the New York State Department
   of Labor, manually transcribed from PDF to `data/raw-data/small/ny-manual-input-data.xlsx`.
-  Provides estimates on a weekly baseis of unemployment claims by industry
+  Provides estimates on a weekly basis of unemployment claims by industry
   supersector, just like WA state, and estimates the percent change in employment
   for every industry. Same caveats and process as the WA state data. For how we 
   apply it, see `2z-job-loss-by-industry-combine-states.R`.
