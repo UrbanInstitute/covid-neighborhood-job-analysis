@@ -1,8 +1,6 @@
 # Creates the data files at the Census tract level using 2017 LODES data,
 # subtracting jobs over 40k from all jobs. BLS or Washington unemployment data is available.
-source("c:\\Users\\anarayanan\\Documents\\GitHub\\covid-neighborhood-job-analysis\\scripts\\update\\4-produce-summary-stats-update.R", encoding = "UTF-8")
-source("c:\\Users\\anarayanan\\Documents\\GitHub\\covid-neighborhood-job-analysis\\scripts\\update\\5-create-sum-files-update.R", encoding = "UTF-8")
-source("c:\\Users\\anarayanan\\Documents\\GitHub\\covid-neighborhood-job-analysis\\scripts\\tests\\check_updated_county_cbsa_sums.R", encoding = "UTF-8")
+
 # load libraries
 library(tidyverse)
 library(sf)
