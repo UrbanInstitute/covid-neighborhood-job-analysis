@@ -219,6 +219,25 @@ us_df_reshaped <- us_sums %>%
 us_d3_list <- list(`99` = list(t = us_sums$X000, vs = us_df_reshaped)) %>%
   toJSON(auto_unbox = T)
 
+get_d3_list <- function(fips, df, geoid_var) {
+  d <- df %>%
+    filter({{ geoid_var }} == fips)
+
+  # setting properties and bounds fields so they match the JSON that 3 expects
+  properties <- d %>%
+    st_drop_geometry() %>%
+    as.list()
+
+  bounds <- d %>%
+    st_geometry() %>%
+    st_bbox() %>%
+    matrix(nrow = 2, ncol = 2, byrow = T)
+
+  output <- list(d = list(bounds = bounds, properties = properties))
+  names(output) <- fips
+  return(output)
+}
+
 county_d3_list <- map(county_sums$county_fips,
   get_d3_list,
   df = county_sums,
