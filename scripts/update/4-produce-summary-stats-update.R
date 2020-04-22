@@ -14,8 +14,9 @@ dir.create("data/processed-data/s3_final/summary_stats", showWarnings = FALSE)
 
 ## Create histograms ----------------------------
 
+geo_file_name_raw <- "data/processed-data/s3_final/job_loss_by_tract_raw.geojson"
 
-job_loss_dat <-  st_read("data/processed-data/s3_final/job_loss_by_tract.geojson")
+job_loss_dat <- st_read(geo_file_name_raw)
 
 
 job_loss_long <- job_loss_dat %>%

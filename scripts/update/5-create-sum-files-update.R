@@ -7,6 +7,7 @@ library(purrr)
 # Set max bin values after evaluating histograms in S3
 tmax_bins <- c(100, 150, 200, 250, 700)
 max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 7000, 200000)
+geo_file_name_raw <- "data/processed-data/s3_final/job_loss_by_tract_raw.geojson"
 
 
 #----Generate job loss estimates for all counties/cbsa's------------------------------
@@ -37,7 +38,7 @@ my_cbsas <- st_read("data/raw-data/big/cbsas.geojson") %>%
 
 
 
-job_loss_wide_sf <- st_read("data/processed-data/s3_final/job_loss_by_tract.geojson")
+job_loss_wide_sf <- st_read(geo_file_name_raw)
 
 # Function to get max value of the total job loss in any industry for the data
 # aggregated by the geography

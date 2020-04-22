@@ -128,8 +128,19 @@ assert(
 # job_loss_by_tract.geojson which is list of all tracts,
 # thier cbsa (can be NA) and job loss estimates by sector
 
+geo_file_name_raw <- "data/processed-data/s3_final/job_loss_by_tract_raw.geojson"
 geo_file_name <- "data/processed-data/s3_final/job_loss_by_tract.geojson"
 
+# Write out unrounded file for use in county/cbsa sum scripts
+job_loss_wide_sf %>%
+  select(-c(
+    county_fips,
+    county_name,
+    cbsa_name
+  )) %>%
+  st_write(geo_file_name_raw, delete_dsn = TRUE)
+
+# Write out rounded file for upload to S3 and Urban Data Catalog
 job_loss_wide_sf %>%
   select(-c(
     county_fips,
@@ -144,7 +155,7 @@ job_loss_wide_sf %>%
   # write out geography
   st_write(geo_file_name, delete_dsn = TRUE)
 
-# Write out job loss per tract as CSV
+# Write out rounded file as CSV
 job_loss_wide_sf %>%
   # Since this is only for Data Catalog, we include extra county columns
   # round jobs by industry to 0.1 (to decrease output file size)
