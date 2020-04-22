@@ -20,32 +20,35 @@ lehd_types <- read_csv("data/raw-data/small/lehd_types.csv")
 trct_cty_cbsa_xwalk <- read_csv("data/processed-data/tract_county_cbsa_xwalk.csv")
 
 
-# Read in % change employement estimates from WA or BLS
-prep_employment_join <- function(df) {
-  df %>%
-    mutate(lodes_var = tolower(lodes_var)) %>%
-    select(lodes_var, percent_change_employment)
-}
+# Read in # change employment estimates by state
+job_loss_estimates_by_state <-
+  read_csv("data/processed-data/state_job_change_all_states_most_recent.csv") %>%
+  transmute(
+    lodes_var = tolower(lodes_var),
+    percent_change_employment = percent_change_employment_st,
+    state,
+    state_fips
+  )
 
-job_loss_estimates <- str_glue("data/processed-data/job_change_{dataset}_most_recent.csv") %>%
-  read_csv() %>%
-  prep_employment_join()
 
-
-lodes_joined <- read_csv("data/processed-data/lodes_joined.csv")
+lodes_joined <- read_csv("data/processed-data/lodes_joined.csv") %>%
+  mutate(state_fips = substr(trct, 1, 2))
 
 #----Generate job loss estimates for all tracts-----------------------------------
 
 # Generate job loss estimates for each industry across all tracts.
 
 job_loss_wide <- lodes_joined %>%
-  # join lodes total employment data to % change in
-  # employment estimates from WA or BLS
-  left_join(job_loss_estimates,
-    by = c("variable" = "lodes_var")
-  ) %>%
   # keep only industry variables
   filter(startsWith(variable, "cns")) %>%
+  # join lodes total employment data to % change in
+  # employment estimates from WA or BLS
+  left_join(job_loss_estimates_by_state,
+    by = c(
+      "variable" = "lodes_var",
+      "state_fips" = "state_fips"
+    )
+  ) %>%
   # multiply number of jobs in industry by the % change unemployment for that industry
   mutate(
     job_loss_in_industry = value * -1 * percent_change_employment,
