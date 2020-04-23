@@ -107,6 +107,17 @@ child care support, or cash assistance - to those who need it most.
   is completely optional and in most cases not needed.
   
 
+## Manual Data Updates
+Because the New York State data and BLS state-level advanced claims are released in PDF format, we use a manual process to update those files, as follows:
+
+  1) Download the most recent BLS state-level advanced claims data from https://oui.doleta.gov/unemploy/claims.asp. Replace past weeks of data/raw-data/small/initial-claims-bls-state.xlsx with this data as they may have been updated.
+
+  2) Convert the most recent PDF to excel from https://www.dol.gov/ui/data.pdf, and add the current week of data as a new column to the sheet in data/raw-data/small/initial-claims-bls-state.xlsx. Be sure that states line up - they may be in different orders in the PDF and the claims data spreadsheet.
+
+  3) Download the most recent NY state data from https://labor.ny.gov/stats/weekly-ui-claims-report.shtm and add the current week of data as a new column to the sheet in data/raw-data/small/ny-manual-input-data.xlsx."
+
+
+
 ## Caveats
 
 For a complete list of caveats, see the technical appendix available from our

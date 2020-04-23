@@ -15,7 +15,7 @@ start_quarter <- 3
 past_unemployment_weeks <- 5
 
 #should update every week
-filename <- "UI claims week 14_2020.xlsx"
+filename <- "UI claims week 15_2020.xlsx"
 
 
 ##----Read in data------------------------------------------------------
