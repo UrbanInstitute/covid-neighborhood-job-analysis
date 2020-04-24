@@ -5,8 +5,9 @@ library(purrr)
 
 #----Set parameters-------------------------------------------
 # Set max bin values after evaluating histograms in S3
-tmax_bins <- c(100, 150, 200, 250, 700)
-max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 7000, 200000)
+tmax_bins <- c(100, 150, 200, 250, 800)
+max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 10000, 250000)
+
 geo_file_name_raw <- "data/processed-data/s3_final/job_loss_by_tract_raw.geojson"
 
 
