@@ -46,7 +46,7 @@ child care support, or cash assistance - to those who need it most.
 
 ## Description of Scripts
 
-###`static/`
+### `static/`
 - **`1-download-data.R`**: Downloads Census tract, state, and CBSA data for the analysis and Census [LODES](https://lehd.ces.census.gov/data/) data aggregated to the Census tract and available on the [Urban Data
   Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes)
 
@@ -57,7 +57,7 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
 
 - **`4-transfer-to-s3-static.R`**: Transfers a few static files to S3, mostly used in the data viz
 
-###`update/`
+### `update/`
 - **`1-download-data-update.R`**: Downloads BLS QCEW data for US, and WA state weekly unemployment data
 
 - **`2a-job-loss-by-industry-wa-update.R`**: Uses data from the Washington State
