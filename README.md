@@ -13,7 +13,7 @@ We hope government support programs, and non-profit service providers use the
 web app and this data to more effectively dedicate resources - such as food,
 child care support, or cash assistance - to those who need it most.
 
-## Required libraries
+## Required R libraries
 
 - `tidyverse`
 - `sf`
@@ -27,76 +27,125 @@ child care support, or cash assistance - to those who need it most.
 ## Directory Structure
 
 - `scripts/` stores the relevant scripts
+  - `static/`: scripts that need to be run once when the repo is cloned
+  - `dynamic/`: scripts that need to be run every time the underlying employment
+    data from BLS or individual states are updated. We will update the data once
+    a week on Thursdays until the May BLS release, after which we will update
+    the data monthly in line with BLS data updates.
 - `data/` stores the data
   - `raw-data/` stores raw data.
     - `small/` stores data that can be pushed to Github. All manually compiled
       data needed to run the scripts are here
     - `big/` stores data that can't be pushed to Github, but will be downloaded in
-      through `1-download-data.R`
-  - `processed-data/` stores processed data, none of which will be written to Github
+      through the `1-download-data-*` scripts
+  - `processed-data/` stores processed data which are outputted from the
+    scripts, some of which will be written to Github
+    - `s3_final/`: The final versions of the data that will be written to S3 and be made publicly available on
+    the Urban [Data Catalog](https://datacatalog.urban.org/dataset/estimated-low-income-jobs-lost-covid-19).
 
 
 ## Description of Scripts
 
-- **`1-download-data.R`**: Downloads the relevant Census geographies, BLS data,
-  LODES data,and WA state unemployment data to the `data/raw-data/big/` folder.
-- **`2a-job-loss-by-industry-wa.R`**: Uses data from the Washington State
+### `static/`
+- **`1-download-data.R`**: Downloads Census tract, state, and CBSA data for the analysis and Census [LODES](https://lehd.ces.census.gov/data/) data aggregated to the Census tract and available on the [Urban Data
+  Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes)
+
+- **`2-produce-geo-files.R`**: Produces some intermediary geographic files including geojsons of all
+CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
+
+- **`3-produce-data-files-static.R`**: Produces `lodes_joined.csv` from the Census LODES data which is listing of the number of low income workers in every tract-industry combination in the US
+
+- **`4-transfer-to-s3-static.R`**: Transfers a few static files to S3, mostly used in the data viz
+
+### `update/`
+- **`1-download-data-update.R`**: Downloads BLS QCEW data for US, and WA state weekly unemployment data
+
+- **`2a-job-loss-by-industry-wa-update.R`**: Uses data from the Washington State
   Employment Security Department - which provides estimates on a weekly basis of
   unemployment claims by industry supersector - to estimate the percent change
-  in employment for every industry.  We apply the relative estimates to the
-  country by comparing job loss relative to NAICS sector from BLS QCEW data,
-  until the May BLS CES update, which should provide a better estimate of job
-  loss by industry nationally. Note that WA state data does not capture % change
+  in employment for every industry. Note that WA state data does not capture % change
   in employment, as it only includes unemployment claims, not new hires, but
   should be a decent proxy for relative job loss among industries in the short
-  term. Both this script and the next script produce a similar data files, so 
-  that the BLS data, when they are released in May, can be substituted for WA 
-  state data
-- **`2b-job-loss-by-industry-bls.R`**: Uses the national Bureau of Labor
+  term. Key output of this script is `job_change_wa_most_recent.csv`
+  
+- **`2b-job-loss-by-industry-bls-update.R`**: Uses the national Bureau of Labor
   Statistics (BLS) Current Employment Statistics (CES) dataset to generate the
   estimated percent changes in employment per industry.  Because stay at home
   and other orders happened in a staggered fashion, and the CES reports for the
   pay period includes the 12th of the previous month, we will not be using
-  this data until the May BLS release.
+  this data until the May 8th BLS release.
+  
 - **`2c-job-loss-by-industry-ny.R`**: Uses data from the New York State Department
   of Labor, manually transcribed from PDF to `data/raw-data/small/ny-manual-input-data.xlsx`.
-  Provides estimates on a weekly baseis of unemployment claims by industry
+  Provides estimates on a weekly basis of unemployment claims by industry
   supersector, just like WA state, and estimates the percent change in employment
   for every industry. Same caveats and process as the WA state data. For how we 
   apply it, see `2z-job-loss-by-industry-combine-states.R`.
-- **`2z-job-loss-by-industry-combine-states.R`**: Combines all states 
+  
+- **`2y-job-loss-by-industry-combine-states.R`**: Combines all states 
   unemployment claims change data (currently WA and NY) into a single, weighted 
-  average file. We apply this weighted average to the LODES data to produce
-  better estimates. Same caveats and process as WA data.
-- **`3-produce-geo-files.R`**: Generates a few intermediary geographic files for use
-  in analysis, including:
-    - single geojson of all tracts in the US
-    - a tract to cbsa crosswalk
-    - a geojson of all tracts not in any cbsas
-- **`4-produce-data-files.R`**: Generates estimates of job loss by tract using 2017
+  average industry job loss file. 
+  
+- **`2z-job-loss-by-industry-by-state.R`**: Generates a job loss by industry by state file using 
+  the weighted average industry job loss file and BLS advance weekly claims data. State-industry job loss 
+  figures are based on the weighted average file, but are  up/downweighted by the BLS advance 
+  weekly claims data for higher accuracy within states. State level totals and job 
+  loss calculations come from the BLS advance weekly claims for the previous weeks, 
+  divided by the BLS QCEW data, to ensure we are using similar data as comparisons 
+  across files. A ratio of job loss in the state compared to job loss as a whole
+  in the industry file is applied for each state to the industry estimates to
+  produce a job loss by industry by state file. States with actual job loss by
+  industry data are applied as is (currently WA and NY). The key output file is 
+  `state_job_change_all_states_most_recent.csv`
+
+- **`3-produce-data-files.R`**: Generates estimates of job loss by tract using 2017
   LODES data from the [Urban Institute Data
   Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes),
   and unemployment rates by industry generated in script `2a` (initial run), `2z` 
   (subsequent updates in April) or `2b` (subsequent updates in May and beyond). 
-  This file produces the main outputs used in the interactive data viz, including:
-    -  `job_loss_by_tract.geojson`: Estimated job losses by industry for every
-       tract in the US
-    - `sum_job_loss_county.geojson`: Estimated job losses by industry for every
+  This file produces the main output used in the interactive data viz - 
+  `job_loss_by_tract.geojson` which contains estimated job losses by industry for every
+  tract in the US
+       
+- **`4-produce-summary-stats-update.R`**: Generates some summary stats and histograms about
+  the distribution of the estimated job loss numbers by county/cbsa. These histograms are used
+  to set breakpoints for the legends in our dataviz. Running this
+  is completely optional and in most cases not needed - unless you plan on recreating our data viz
+  
+- **`5-create-sum-files-update.R`**: Summarizes `job_loss_by_tract.gejson` by CBSA, county, and whole USA. 
+  The main output files are     
+    - `sum_job_loss_county.geojson (& csv)`: Estimated job losses by industry for every
       county in the US
-    - `sum_job_loss_cbsa.geojson`: Estimated job losses by industry for every
+    - `sum_job_loss_cbsa.geojson (& csv)`: Estimated job losses by industry for every
       CBSA in the US
-    - `sum_job_loss_us.geojson`: Estimated job losses by industry for the entire
+    - `sum_job_loss_us.geojson (& csv)`: Estimated job losses by industry for the entire
       United States
-
-- **`5-transfer-to-s3.R`**: After files are written out and quality checked,
+  There are two fields in these files called max, and tmax that are based on the breakpoints determined
+  after script 4. Unless you are planning on recreating our data viz, you can safely
+  ignore these columns
+  
+- **`6-transfer-to-s3.R`**: After files are written out and quality checked,
   this script transfers them to S3 in a publicly available bucket. Running this
   is completely optional and in most cases not needed.
   
+
+## Manual Data Updates
+Because the New York State data and BLS state-level advanced claims are released in PDF format, we use a manual process to update those files, as follows:
+
+  1) Download the most recent BLS state-level advanced claims data from https://oui.doleta.gov/unemploy/claims.asp. Replace past weeks of data/raw-data/small/initial-claims-bls-state.xlsx with this data as they may have been updated.
+
+  2) Convert the most recent PDF to excel from https://www.dol.gov/ui/data.pdf, and add the current week of data as a new column to the sheet in data/raw-data/small/initial-claims-bls-state.xlsx. Be sure that states line up - they may be in different orders in the PDF and the claims data spreadsheet.
+
+  3) Download the most recent NY state data from https://labor.ny.gov/stats/weekly-ui-claims-report.shtm and add the current week of data as a new column to the sheet in data/raw-data/small/ny-manual-input-data.xlsx."
+
+
 
 ## Caveats
 
 For a complete list of caveats, see the technical appendix available from our
 [web application](https://www.urban.org/features/where-low-income-jobs-are-being-lost-covid-19).
+
+See [changelog.md](https://github.com/UrbanInstitute/covid-neighborhood-job-analysis/blob/master/changelog.md) for recent changes and updates.
 
 ## Contact
 
