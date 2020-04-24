@@ -50,7 +50,7 @@ child care support, or cash assistance - to those who need it most.
 - **`1-download-data.R`**: Downloads Census tract, state, and CBSA data for the analysis and Census [LODES](https://lehd.ces.census.gov/data/) data aggregated to the Census tract and available on the [Urban Data
   Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes)
 
-- **~2-produce-geo-files.R`**: Produces some intermediary geogrpahic files including geojsons of all
+- **`2-produce-geo-files.R`**: Produces some intermediary geographic files including geojsons of all
 CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
 
 - **`3-produce-data-files-static.R`**: Produces `lodes_joined.csv` from the Census LODES data which is listing of the number of low income workers in every tract-industry combination in the US
@@ -107,7 +107,7 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
   `job_loss_by_tract.geojson` which contains estimated job losses by industry for every
   tract in the US
        
-- **`4-produce-summry-stats-update.R`**: Generates some summary stats and histograms about
+- **`4-produce-summary-stats-update.R`**: Generates some summary stats and histograms about
   the distribution of the estimated job loss numbers by county/cbsa. These histograms are used
   to set breakpoints for the legends in our dataviz. Running this
   is completely optional and in most cases not needed - unless you plan on recreating our data viz
