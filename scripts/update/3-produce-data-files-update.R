@@ -19,6 +19,13 @@ lehd_types <- read_csv("data/raw-data/small/lehd_types.csv")
 # read in geography crosswalk from trct to county to cbsa
 trct_cty_cbsa_xwalk <- read_csv("data/processed-data/tract_county_cbsa_xwalk.csv")
 
+# read in states data
+states_data <- st_read("data/raw-data/big/states.geojson") %>%
+  transmute(
+    state_fips = STATEFP,
+    state_name = NAME
+  ) %>%
+  st_drop_geometry()
 
 # Read in # change employment estimates by state
 job_loss_estimates_by_state <-
@@ -159,12 +166,21 @@ job_loss_wide_sf %>%
 job_loss_wide_sf %>%
   # Since this is only for Data Catalog, we include extra county columns
   # round jobs by industry to 0.1 (to decrease output file size)
-  mutate_at(.vars = vars(X01:X20), ~ round(., digits = 1)) %>%
+  mutate_at(
+    .vars = vars(X01:X20), ~ round(., digits = 1)
+  ) %>%
+  mutate(state_fips = substr(county_fips, 1, 2)) %>%
+  # append state data for Data Catalog CSV for easier user access
+  left_join(states_data) %>%
   # round total jobs lost to nearest integer
   # for reader understandability (What is 1.3 jobs?)
   mutate(X000 = round(X000)) %>%
   # Drop geometry for smaller file sizes
   st_drop_geometry() %>%
+  select(
+    GEOID, state_name, county_name, state_fips,
+    county_fips, cbsa, everything()
+  ) %>%
   # round total jobs lost to integer for reader
   # for reader understandability (What is 1.3 jobs?)
   write_csv("data/processed-data/s3_final/job_loss_by_tract.csv")
