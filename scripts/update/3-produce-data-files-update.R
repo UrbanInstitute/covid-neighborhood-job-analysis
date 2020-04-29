@@ -156,6 +156,8 @@ job_loss_wide_sf %>%
     county_fips,
     county_name,
     cbsa_name,
+    # Removing li total employment numbers and unemp rates
+    # May want to change later
     total_li_workers_employed,
     li_worker_unemp_rate
   )) %>%
@@ -200,6 +202,9 @@ job_loss_wide_sf %>%
   write_csv("data/processed-data/s3_final/job_loss_by_tract.csv")
 
 #----Aggregate and write out job loss estimates for counties-----------------------------------
+# Note, these county and cbsa aggregation are not yet ready for uplaod to S3 as
+# manual intervention is needed to check summary stats and decide max breakpoint.
+# This is done in script 4 and 5
 
 county_sums <- job_loss_wide_sf %>%
   # drop spatial features
@@ -211,9 +216,10 @@ county_sums <- job_loss_wide_sf %>%
   # group by the county
   group_by(county_fips) %>%
   # aggregate industry job loss values to county
-  summarise_at(.vars = vars(starts_with("X")), ~ sum(.)) %>%
-  # ungroup data
+  summarise_at(.vars = vars(starts_with("X")|starts_with("total_li_workers_employed")), ~ sum(.)) %>%
   ungroup() %>%
+  # add total unemployment rate
+  mutate(li_worker_unemp_rate = round(X000/total_li_workers_employed, 5)) %>% 
   # write out delimited
   write_csv("data/processed-data/county_sums.csv")
 
@@ -229,6 +235,9 @@ cbsa_sums <- job_loss_wide_sf %>%
   # group by the cbsa
   group_by(cbsa) %>%
   # aggregate industry job loss values to cbsa
-  summarise_at(.vars = vars(starts_with("X")), ~ sum(.)) %>%
+  summarise_at(.vars = vars(starts_with("X")|starts_with("total_li_workers_employed")), ~ sum(.)) %>%
+  ungroup() %>% 
+  # add total unemployment rate
+  mutate(li_worker_unemp_rate = round(X000/total_li_workers_employed, 5)) %>% 
   # write out delimited
   write_csv("data/processed-data/cbsa_sums.csv")
