@@ -10,7 +10,7 @@ library(testit)
 # filename: filename of WA unemployment data (downloaded from
 #           download-data.R)
 # is_bls: Using state data or BLS data for industry data
-past_unemployment_weeks <- 5
+past_unemployment_weeks <- 6
 filename <- "initial-claims-bls-state.xlsx"
 is_bls <- FALSE
 
