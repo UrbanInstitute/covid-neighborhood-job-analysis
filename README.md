@@ -66,7 +66,8 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
   in employment for every industry. Note that WA state data does not capture % change
   in employment, as it only includes unemployment claims, not new hires, but
   should be a decent proxy for relative job loss among industries in the short
-  term. Key output of this script is `job_change_wa_most_recent.csv`
+  term. Key output of this script is `job_change_wa_most_recent.csv`. Not necessary
+  for estimates using BLS CES data.
   
 - **`2b-job-loss-by-industry-bls-update.R`**: Uses the national Bureau of Labor
   Statistics (BLS) Current Employment Statistics (CES) dataset to generate the
@@ -80,23 +81,24 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
   Provides estimates on a weekly basis of unemployment claims by industry
   supersector, just like WA state, and estimates the percent change in employment
   for every industry. Same caveats and process as the WA state data. For how we 
-  apply it, see `2z-job-loss-by-industry-combine-states.R`.
+  apply it, see `2z-job-loss-by-industry-combine-states.R`. Not necessary for 
+  estimates using BLS CES data.
   
 - **`2y-job-loss-by-industry-combine-states.R`**: Combines all states 
   unemployment claims change data (currently WA and NY) into a single, weighted 
-  average industry job loss file. 
+  average industry job loss file. Not necessary for estimates using BLS CES data.
   
 - **`2z-job-loss-by-industry-by-state.R`**: Generates a job loss by industry by state file using 
-  the weighted average industry job loss file and BLS advance weekly claims data. State-industry job loss 
-  figures are based on the weighted average file, but are  up/downweighted by the BLS advance 
-  weekly claims data for higher accuracy within states. State level totals and job 
-  loss calculations come from the BLS advance weekly claims for the previous weeks, 
-  divided by the BLS QCEW data, to ensure we are using similar data as comparisons 
+  the weighted average industry job loss file (BLS beginning May 8) and BLS advance weekly 
+  claims data. State-industry job loss figures are based on the weighted average file, but are 
+  up/downweighted by the BLS advance weekly claims data for higher accuracy within states. State 
+  level totals and job loss calculations come from the BLS advance weekly claims for the previous 
+  weeks, divided by the BLS QCEW data, to ensure we are using similar data as comparisons 
   across files. A ratio of job loss in the state compared to job loss as a whole
   in the industry file is applied for each state to the industry estimates to
   produce a job loss by industry by state file. States with actual job loss by
-  industry data are applied as is (currently WA and NY). The key output file is 
-  `state_job_change_all_states_most_recent.csv`
+  industry data are applied as is (currently WA and NY) for updates before May 8. 
+  The key output file is `state_job_change_all_states_most_recent.csv`.
 
 - **`3-produce-data-files.R`**: Generates estimates of job loss by tract using 2017
   LODES data from the [Urban Institute Data

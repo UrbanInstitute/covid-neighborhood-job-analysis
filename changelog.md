@@ -1,5 +1,13 @@
 # Changelog
 
+## 5/8/20 Update
+
+As planned, made the following updates:
+
+- Used BLS CES data for national net job change estimates
+- Changed the method of using advanced state-level claims to modify state-by-industry level job loss estimates file so that estimates were accurate for new data
+- No longer using any state industry level estimates
+
 ## 4/23/20 Update
 
 Due to great user feedback, made the following updates:
