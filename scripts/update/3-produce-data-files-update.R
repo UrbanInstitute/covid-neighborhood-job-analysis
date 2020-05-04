@@ -44,23 +44,33 @@ lodes_joined <- read_csv("data/processed-data/lodes_joined.csv") %>%
 #----Generate job loss estimates for all tracts-----------------------------------
 
 # Generate job loss estimates for each industry across all tracts.
-
-job_loss_wide <- lodes_joined %>%
+# Every rown in job_loss_long is a tract-industry combo
+job_loss_long <- lodes_joined %>%
   # keep only industry variables
   filter(startsWith(variable, "cns")) %>%
   # join lodes total employment data to % change in
   # employment estimates from WA or BLS
   left_join(job_loss_estimates_by_state,
-    by = c(
-      "variable" = "lodes_var",
-      "state_fips" = "state_fips"
-    )
+            by = c(
+              "variable" = "lodes_var",
+              "state_fips" = "state_fips"
+            )
   ) %>%
   # multiply number of jobs in industry by the % change unemployment for that industry
   mutate(
     job_loss_in_industry = value * -1 * percent_change_employment,
     ind_var = paste0("X", str_remove(variable, "cns"))
-  ) %>%
+  ) 
+
+# Get total low income workers by tract. This will be used for CSV writouet to Data Portal
+# This number was requested by some users who wanted li unemployment rates by county/state,etc
+li_employment_by_tract = job_loss_long %>% 
+  group_by(trct) %>% 
+  summarize(total_li_workers_employed= sum(value))
+
+# Generate job loss estimates for each tract. Industry vars are now columns, 
+# Every row in job_loss_wide is a tract
+job_loss_wide = job_loss_long %>% 
   select(-value, -year, -percent_change_employment, -variable) %>%
   # pvit wide to go from row=tract-industry  to row=tract
   pivot_wider(names_from = ind_var, values_from = job_loss_in_industry, id_cols = trct) %>%
@@ -68,8 +78,10 @@ job_loss_wide <- lodes_joined %>%
   mutate(X000 = (.) %>% select(starts_with("X")) %>% rowSums(na.rm = TRUE)) %>%
   # append county/cbsa info for each tract
   left_join(trct_cty_cbsa_xwalk, by = c("trct" = "GEOID")) %>%
-  select(trct, county_fips, county_name, cbsa, cbsa_name, everything())
-# Note: every row of job_loss_wide is a tract
+  select(trct, county_fips, county_name, cbsa, cbsa_name, everything()) %>% 
+  # append total li employment and li unemployment rate based on user request
+  left_join(li_employment_by_tract, by = c("trct" = "trct")) %>% 
+  mutate(li_worker_unemp_rate = round(X000/total_li_workers_employed, 5)) 
 
 # The LODES data has one tract not found in the master 2018 Census tract file.
 # This is tract 12057980100, which is in Florida and seems to be mostly water.
@@ -143,7 +155,11 @@ job_loss_wide_sf %>%
   select(-c(
     county_fips,
     county_name,
-    cbsa_name
+    cbsa_name,
+    # Removing li total employment numbers and unemp rates
+    # May want to change later
+    total_li_workers_employed,
+    li_worker_unemp_rate
   )) %>%
   st_write(geo_file_name_raw, delete_dsn = TRUE)
 
@@ -186,6 +202,9 @@ job_loss_wide_sf %>%
   write_csv("data/processed-data/s3_final/job_loss_by_tract.csv")
 
 #----Aggregate and write out job loss estimates for counties-----------------------------------
+# Note, these county and cbsa aggregation are not yet ready for uplaod to S3 as
+# manual intervention is needed to check summary stats and decide max breakpoint.
+# This is done in script 4 and 5
 
 county_sums <- job_loss_wide_sf %>%
   # drop spatial features
@@ -197,9 +216,10 @@ county_sums <- job_loss_wide_sf %>%
   # group by the county
   group_by(county_fips) %>%
   # aggregate industry job loss values to county
-  summarise_at(.vars = vars(starts_with("X")), ~ sum(.)) %>%
-  # ungroup data
+  summarise_at(.vars = vars(starts_with("X")|starts_with("total_li_workers_employed")), ~ sum(.)) %>%
   ungroup() %>%
+  # add total unemployment rate
+  mutate(li_worker_unemp_rate = round(X000/total_li_workers_employed, 5)) %>% 
   # write out delimited
   write_csv("data/processed-data/county_sums.csv")
 
@@ -215,6 +235,9 @@ cbsa_sums <- job_loss_wide_sf %>%
   # group by the cbsa
   group_by(cbsa) %>%
   # aggregate industry job loss values to cbsa
-  summarise_at(.vars = vars(starts_with("X")), ~ sum(.)) %>%
+  summarise_at(.vars = vars(starts_with("X")|starts_with("total_li_workers_employed")), ~ sum(.)) %>%
+  ungroup() %>% 
+  # add total unemployment rate
+  mutate(li_worker_unemp_rate = round(X000/total_li_workers_employed, 5)) %>% 
   # write out delimited
   write_csv("data/processed-data/cbsa_sums.csv")

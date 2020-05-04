@@ -144,7 +144,10 @@ county_sums <- read_csv("data/processed-data/county_sums.csv") %>%
   # round jobs by industry to 0.1 (to decrease output file size)
   mutate_at(.vars = vars(X01:X20), ~ round(., digits = 1)) %>%
   # round total jobs lost to integer for reader understandability
-  mutate(X000 = round(X000))
+  mutate(X000 = round(X000)) %>% 
+  # put unemployment numbers and rates at end
+  select(-total_li_workers_employed, -li_worker_unemp_rate, 
+         total_li_workers_employed,li_worker_unemp_rate)
 
 
 # Get max value of any 1 tracts jobs loss in any industry for
@@ -176,13 +179,26 @@ cbsa_sums <- read_csv("data/processed-data/cbsa_sums.csv") %>%
   # round jobs by industry to 0.1 (to decrease output file size)
   mutate_at(.vars = vars(X01:X20), ~ round(., digits = 1)) %>%
   # round total jobs lost to integer for reader understandability
-  mutate(X000 = round(X000))
+  mutate(X000 = round(X000)) %>% 
+  # put unemployment numbers and rates at end
+  select(-total_li_workers_employed, -li_worker_unemp_rate, 
+         total_li_workers_employed,li_worker_unemp_rate)
+
 
 
 #----Write out job loss estimates for counties/cbsa's------------------------------
 
-st_write(county_sums, "data/processed-data/s3_final/sum_job_loss_county.geojson", delete_dsn = TRUE)
-st_write(cbsa_sums, "data/processed-data/s3_final/sum_job_loss_cbsa.geojson", delete_dsn = TRUE)
+# Write out geojsons used 
+st_write(county_sums %>%
+           # Removing li total employment numbers and unemp rates
+           # May want to change later
+           select(-li_worker_unemp_rate, -total_li_workers_employed),
+         "data/processed-data/s3_final/sum_job_loss_county.geojson", delete_dsn = TRUE)
+st_write(cbsa_sums %>% 
+           # Removing li total employment numbers and unemp rates
+           # May want to change later
+           select(-li_worker_unemp_rate, -total_li_workers_employed),
+         "data/processed-data/s3_final/sum_job_loss_cbsa.geojson", delete_dsn = TRUE)
 
 # write to csv
 county_sums %>%
@@ -223,8 +239,11 @@ us_d3_list <- list(`99` = list(t = us_sums$X000, vs = us_df_reshaped)) %>%
 
 get_d3_list <- function(fips, df, geoid_var) {
   d <- df %>%
-    filter({{ geoid_var }} == fips)
-
+    filter({{ geoid_var }} == fips) %>% 
+    # Removing li total employment numbers and unemp rates
+    # May want to change later
+    select(-li_worker_unemp_rate, -total_li_workers_employed)
+  
   # setting properties and bounds fields so they match the JSON that 3 expects
   properties <- d %>%
     st_drop_geometry() %>%

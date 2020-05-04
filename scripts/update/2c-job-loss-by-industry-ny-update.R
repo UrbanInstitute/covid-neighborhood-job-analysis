@@ -11,7 +11,7 @@ library(readxl)
 # filename: filename of WA unemployment data (downloaded from
 #           download-data.R)
 start_quarter <- 3
-past_unemployment_weeks <- 5
+past_unemployment_weeks <- 6
 filename <- "ny-manual-input-data.xlsx"
 
 

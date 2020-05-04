@@ -12,10 +12,10 @@ library(readxl)
 #           download-data.R)
 start_quarter <- 3
 #decision point to use 5 weeks or keep increasing
-past_unemployment_weeks <- 5
+past_unemployment_weeks <- 6
 
 #should update every week
-filename <- "UI claims week 15_2020.xlsx"
+filename <- "UI claims week wa_most_recent.xlsx"
 
 
 ##----Read in data------------------------------------------------------

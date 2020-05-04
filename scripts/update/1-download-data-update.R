@@ -60,8 +60,8 @@ file.rename(
 # WA state unemployment estimates, most recent
 # Needs manual update (increase week # by 1)
 download.file(
-      url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week 15_2020.xlsx",
-      destfile = "data/raw-data/big/UI claims week 15_2020.xlsx",
+      url = "https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week 16_2020.xlsx",
+      destfile = "data/raw-data/big/UI claims week wa_most_recent.xlsx",
       # download file in binary mode, if you don't, xlsx file is corrupted
       mode = "wb"
 )
@@ -70,3 +70,7 @@ download.file(
 # Note you also need to manually update
 # data/raw-data/small/ny-manual-input-data.xlsx with newest data from
 # https://labor.ny.gov/stats/weekly-ui-claims-report.shtm
+
+# And you need to manually update 
+# data/raw-data/small/initial-cliams-bls-state.xlsx
+# with data from https://oui.doleta.gov/unemploy/claims.asp
