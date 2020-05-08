@@ -33,11 +33,6 @@ week_num_wa <- 16
 start_quarter_lodes <- 3
 
 
-
-
-
-
-
 if (static) {
     source("scripts\\static\\1-download-data-static.R", encoding = "UTF-8")
     source("scripts\\static\\2-produce-geo-files-static.R", encoding = "UTF-8")

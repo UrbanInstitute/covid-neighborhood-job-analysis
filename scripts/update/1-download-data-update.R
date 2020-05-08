@@ -159,5 +159,5 @@ update_wa_unemp_data(week_num_wa)
 # https://labor.ny.gov/stats/weekly-ui-claims-report.shtm
 
 # And you need to manually update
-# data/raw-data/small/initial-cliams-bls-state.xlsx
+# data/raw-data/small/initial-claims-bls-state.csv
 # with data from https://oui.doleta.gov/unemploy/claims.asp

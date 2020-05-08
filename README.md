@@ -142,12 +142,12 @@ Because the New York State data and BLS state-level advanced claims are released
      2020-2021 > Spreadsheet > Submit. Once the Excel sheet downloads, open it,
      and filter to the latest week in the `Filed week ended` column. The values in
      the `Initial Claims` column are going to be a little different form the
-     values in `data/raw-data/small/initial-claims-bls-state.xlsx` as the BLS
+     values in `data/raw-data/small/initial-claims-bls-state.csv` as the BLS
      updates the previous weeks numbers. You need to replace the old values in
-     `initial-claims-bls-state.xlsx` with the updated values from the 
+     `initial-claims-bls-state.csv` with the updated values from the 
      `Initial Claims`  column of the downloaded excel sheet.
 
-  2) Add a column to `data/raw-data/small/initial-claims-bls-state.xlsx` for the
+  2) Add a column to `data/raw-data/small/initial-claims-bls-state.csv` for the
      next week and manually fill in the new weeks numbers reported in this
      pdf: [https://www.dol.gov/ui/data.pdf/](https://www.dol.gov/ui/data.pdf/) 
      Be sure that states line up - they may be in different orders in the PDF
