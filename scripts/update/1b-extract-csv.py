@@ -47,20 +47,22 @@ def get_table_csv_results(file_name):
         img_test = file.read()
         bytes_test = bytearray(img_test)
         print("Image loaded", file_name)
-        
+
     # read in AWS creds using janky csv indexing (so we don't have to load in pandas)
-    with open('data/raw-data/small/secret_keys.csv', 'r') as file:
-        my_reader = cv.reader(file, delimiter=',')
+    with open("data/raw-data/small/secret_keys.csv", "r") as file:
+        my_reader = cv.reader(file, delimiter=",")
         creds = []
         for row in my_reader:
             creds = creds + row
 
     # process using image bytes
     # get the results
-    client = boto3.client("textract", 
-                        region_name = "us-east-1",
-                        aws_access_key_id=creds[2],
-                        aws_secret_access_key=creds[3],)
+    client = boto3.client(
+        "textract",
+        region_name="us-east-1",
+        aws_access_key_id=creds[2],
+        aws_secret_access_key=creds[3],
+    )
 
     response = client.analyze_document(
         Document={"Bytes": bytes_test}, FeatureTypes=["TABLES"]
@@ -68,13 +70,14 @@ def get_table_csv_results(file_name):
 
     # Get the text blocks
     blocks = response["Blocks"]
-    pprint(blocks)
+    # pprint(blocks)
 
     blocks_map = {}
     table_blocks = []
     for block in blocks:
         blocks_map[block["Id"]] = block
         if block["BlockType"] == "TABLE":
+            print("jj")
             table_blocks.append(block)
 
     if len(table_blocks) <= 0:
@@ -108,6 +111,9 @@ def generate_table_csv(table_result, blocks_map, table_index):
 
 def main(file_name):
     table_csv = get_table_csv_results(file_name)
+
+    # Sometimes textract CSV has a header title and two blank rows we don't want
+    table_csv = table_csv.replace("Table: Table_1\n\n", "")
 
     output_file = "data/processed-data/textract_bls_output.csv"
 
