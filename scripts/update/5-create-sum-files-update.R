@@ -143,8 +143,8 @@ generate_county_cbsa_sum_files = function(tmax_bins = tmax_bins,
     # round total jobs lost to integer for reader understandability
     mutate(X000 = round(X000)) %>% 
     # put unemployment numbers and rates at end
-    select(-total_li_workers_employed, -li_worker_unemp_rate, 
-            total_li_workers_employed,li_worker_unemp_rate)
+    select(-total_li_workers_employed, -low_income_worker_job_loss_raterate, 
+            total_li_workers_employed,low_income_worker_job_loss_raterate)
 
 
     # Get max value of any 1 tracts jobs loss in any industry for
@@ -178,8 +178,8 @@ generate_county_cbsa_sum_files = function(tmax_bins = tmax_bins,
     # round total jobs lost to integer for reader understandability
     mutate(X000 = round(X000)) %>% 
     # put unemployment numbers and rates at end
-    select(-total_li_workers_employed, -li_worker_unemp_rate, 
-            total_li_workers_employed,li_worker_unemp_rate)
+    select(-total_li_workers_employed, -low_income_worker_job_loss_raterate, 
+            total_li_workers_employed,low_income_worker_job_loss_raterate)
 
 
 
@@ -189,12 +189,12 @@ generate_county_cbsa_sum_files = function(tmax_bins = tmax_bins,
     st_write(county_sums %>%
             # Removing li total employment numbers and unemp rates
             # May want to change later
-            select(-li_worker_unemp_rate, -total_li_workers_employed),
+            select(-low_income_worker_job_loss_raterate, -total_li_workers_employed),
             "data/processed-data/s3_final/sum_job_loss_county.geojson", delete_dsn = TRUE)
     st_write(cbsa_sums %>% 
             # Removing li total employment numbers and unemp rates
             # May want to change later
-            select(-li_worker_unemp_rate, -total_li_workers_employed),
+            select(-low_income_worker_job_loss_raterate, -total_li_workers_employed),
             "data/processed-data/s3_final/sum_job_loss_cbsa.geojson", delete_dsn = TRUE)
 
     # write to csv
@@ -238,7 +238,7 @@ generate_county_cbsa_sum_files = function(tmax_bins = tmax_bins,
         filter({{ geoid_var }} == fips) %>% 
         # Removing li total employment numbers and unemp rates
         # May want to change later
-        select(-li_worker_unemp_rate, -total_li_workers_employed)
+        select(-low_income_worker_job_loss_raterate, -total_li_workers_employed)
     
     # setting properties and bounds fields so they match the JSON that data viz team expects
     properties <- d %>%
