@@ -145,27 +145,34 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
 
 ## Manual Data Updates
 Because the New York State data and BLS state-level advanced claims are released
-in PDF format, we use a manual process to update those files, as follows:
+in PDF format, we use a manual process to update those files. These steps,
+outlined below, need to be performed before running the scripts above.
 
   1) Download the most recent NY state data from
      https://labor.ny.gov/stats/weekly-ui-claims-report.shtm and add the 
      current week of data as a new column to the sheet in 
      `data/raw-data/small/ny-manual-input-data.xlsx.`
+    
+  2) Download the most recent BLS state-level advance claims data from
+     https://oui.doleta.gov/unemploy/claims.asp. On the page, select State >
+     2020-2021 > Spreadsheet > Submit. The CSV should be called `r539cy.xls` and
+     should be saved in `data/raw-data/big/`. You may need to open the CSV and
+     resave as an XLS document in order to correctly register it as an XLS file.
+     If you don't do this, R might throw an error when reading the file in.
 
   If you don't run script 1b and/or don't have an AWS account to use Textract,
   you need to perform these additional manual updates:
-  
-  2) Download the most recent BLS state-level advance claims data from
-     https://oui.doleta.gov/unemploy/claims.asp. On the page, select State >
-     2020-2021 > Spreadsheet > Submit. Once the Excel sheet downloads, open it,
-     and filter to the latest week in the `Filed week ended` column. The values in
-     the `Initial Claims` column are going to be a little different form the
-     values in `data/raw-data/small/initial-claims-bls-state.csv` as the BLS
-     updates the previous weeks numbers. You need to replace the old values in
+
+     
+  1) Open `r539cy.xls` and filter to the latest week in the `Filed week ended`
+     column. The values in the `Initial Claims` column are going to be a little
+     different form the values in
+     `data/raw-data/small/initial-claims-bls-state.csv` as the BLS updates the
+     previous weeks numbers. You need to replace the old values in
      `initial-claims-bls-state.csv` with the updated values from the 
      `Initial Claims`  column of the downloaded excel sheet.
 
-  3) Add a column to `data/raw-data/small/initial-claims-bls-state.csv` for the
+  2) Add a column to `data/raw-data/small/initial-claims-bls-state.csv` for the
      next week and manually fill in the new weeks numbers reported in this
      pdf: [https://www.dol.gov/ui/data.pdf/](https://www.dol.gov/ui/data.pdf/) 
      Be sure that states line up - they may be in different orders in the PDF
