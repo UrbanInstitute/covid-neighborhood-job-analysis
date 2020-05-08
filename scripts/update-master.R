@@ -43,6 +43,7 @@ if (static) {
 }
 
 source("scripts\\update\\1-download-data-update.R", encoding = "UTF-8")
+source("scripts\\update\\1b-generate-bls-state-claims-csv-update.R", encoding = "UTF-8")
 source("scripts\\update\\2a-job-loss-by-industry-wa-update.R", encoding = "UTF-8")
 source("scripts\\update\\2b-job-loss-by-industry-bls-update.R", encoding = "UTF-8")
 source("scripts\\update\\2c-job-loss-by-industry-ny-update.R", encoding = "UTF-8")
