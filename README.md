@@ -32,6 +32,9 @@ child care support, or cash assistance - to those who need it most.
     data from BLS or individual states are updated. We will update the data once
     a week on Thursdays until the May BLS release, after which we will update
     the data monthly in line with BLS data updates.
+  - `update-master.R`: The master R script which sets paramters, and sources all
+    other scripts as needed. If you want to recreate our results, this is the
+    only file you'll need to run.
 - `data/` stores the data
   - `raw-data/` stores raw data.
     - `small/` stores data that can be pushed to Github. All manually compiled
@@ -134,11 +137,26 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
 ## Manual Data Updates
 Because the New York State data and BLS state-level advanced claims are released in PDF format, we use a manual process to update those files, as follows:
 
-  1) Download the most recent BLS state-level advanced claims data from https://oui.doleta.gov/unemploy/claims.asp. Replace past weeks of data/raw-data/small/initial-claims-bls-state.xlsx with this data as they may have been updated.
+  1) Download the most recent BLS state-level advanced claims data from
+     https://oui.doleta.gov/unemploy/claims.asp. On the page, select State >
+     2020-2021 > Spreadsheet > Submit. Once the Excel sheet downloads, open it,
+     and filter to the latest week in the `Filed week ended` column. The values in
+     the `Initial Claims` column are going to be a little different form the
+     values in `data/raw-data/small/initial-claims-bls-state.xlsx` as the BLS
+     updates the previous weeks numbers. You need to replace the old values in
+     `initial-claims-bls-state.xlsx` with the updated values from the 
+     `Initial Claims`  column of the downloaded excel sheet.
 
-  2) Convert the most recent PDF to excel from https://www.dol.gov/ui/data.pdf, and add the current week of data as a new column to the sheet in data/raw-data/small/initial-claims-bls-state.xlsx. Be sure that states line up - they may be in different orders in the PDF and the claims data spreadsheet.
+  2) Add a column to `data/raw-data/small/initial-claims-bls-state.xlsx` for the
+     next week and manually fill in the new weeks numbers reported in this
+     pdf: [https://www.dol.gov/ui/data.pdf/](https://www.dol.gov/ui/data.pdf/) 
+     Be sure that states line up - they may be in different orders in the PDF
+     and the claims data spreadsheet.
 
-  3) Download the most recent NY state data from https://labor.ny.gov/stats/weekly-ui-claims-report.shtm and add the current week of data as a new column to the sheet in data/raw-data/small/ny-manual-input-data.xlsx."
+  3) Download the most recent NY state data from
+     https://labor.ny.gov/stats/weekly-ui-claims-report.shtm and add the 
+     current week of data as a new column to the sheet in 
+     `data/raw-data/small/ny-manual-input-data.xlsx.`
 
 
 

@@ -7,6 +7,7 @@ As planned, made the following updates:
 - Used BLS CES data for national net job change estimates
 - Changed the method of using advanced state-level claims to modify state-by-industry level job loss estimates file so that estimates were accurate for new data
 - No longer using any state industry level estimates
+- Update (but don't use) Washington and New York unemployment data
 
 ## 4/23/20 Update
 
