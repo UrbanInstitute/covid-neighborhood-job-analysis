@@ -17,17 +17,17 @@ dryrun <- FALSE
 is_bls <- TRUE
 
 # Number of past weeks of unemployment data to use for WA, NY AND BLS
-past_unemployment_weeks <- 6
+past_unemployment_weeks <- 7
 
 # Set bin values for legend bins and histograms. The histogram needs to be
 # manually reviewd and may need to change these values
-tmax_bins <- c(100, 150, 200, 250, 800)
-max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 10000, 250000)
+tmax_bins <- c(100, 150, 200, 250, 1050)
+max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 10000, 275000)
 
 
 ### Below params are only for NY/WA data
 # Week number for downloading WA data. Latest week as of 2020-05-07 is 17
-week_num_wa <- 16
+week_num_wa <- 17
 
 # LODES quarter from which to start % change in employment
 start_quarter_lodes <- 3
