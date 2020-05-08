@@ -84,7 +84,7 @@ generate_job_loss_by_tract <- function(
         select(trct, county_fips, county_name, cbsa, cbsa_name, everything()) %>%
         # append total li employment and li unemployment rate based on user request
         left_join(li_employment_by_tract, by = c("trct" = "trct")) %>%
-        mutate(low_income_worker_job_loss_raterate = round(X000 / total_li_workers_employed, 5))
+        mutate(low_income_worker_job_loss_rate = round(X000 / total_li_workers_employed, 5))
 
     # The LODES data has one tract not found in the master 2018 Census tract file.
     # This is tract 12057980100, which is in Florida and seems to be mostly water.
@@ -162,7 +162,7 @@ generate_job_loss_by_tract <- function(
             # Removing li total employment numbers and unemp rates
             # May want to change later
             total_li_workers_employed,
-            low_income_worker_job_loss_raterate
+            low_income_worker_job_loss_rate
         )) %>%
         st_write(geo_file_name_raw, delete_dsn = TRUE)
 
@@ -223,7 +223,7 @@ write_county_sums_raw <- function(job_loss_wide_sf) {
         summarise_at(.vars = vars(starts_with("X") | starts_with("total_li_workers_employed")), ~ sum(.)) %>%
         ungroup() %>%
         # add total unemployment rate
-        mutate(low_income_worker_job_loss_raterate = round(X000 / total_li_workers_employed, 5)) %>%
+        mutate(low_income_worker_job_loss_rate = round(X000 / total_li_workers_employed, 5)) %>%
         # write out delimited
         write_csv("data/processed-data/county_sums.csv")
 }
@@ -243,7 +243,7 @@ write_cbsa_sums_raw <- function(job_loss_wide_sf) {
         summarise_at(.vars = vars(starts_with("X") | starts_with("total_li_workers_employed")), ~ sum(.)) %>%
         ungroup() %>%
         # add total unemployment rate
-        mutate(low_income_worker_job_loss_raterate = round(X000 / total_li_workers_employed, 5)) %>%
+        mutate(low_income_worker_job_loss_rate = round(X000 / total_li_workers_employed, 5)) %>%
         # write out delimited
         write_csv("data/processed-data/cbsa_sums.csv")
 }
