@@ -32,6 +32,9 @@ child care support, or cash assistance - to those who need it most.
     data from BLS or individual states are updated. We will update the data once
     a week on Thursdays until the May BLS release, after which we will update
     the data monthly in line with BLS data updates.
+  - `update-master.R`: The master R script which sets paramters, and sources all
+    other scripts as needed. If you want to recreate our results, this is the
+    only file you'll need to run.
 - `data/` stores the data
   - `raw-data/` stores raw data.
     - `small/` stores data that can be pushed to Github. All manually compiled
@@ -59,6 +62,15 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
 
 ### `update/`
 - **`1-download-data-update.R`**: Downloads BLS QCEW data for US, and WA state weekly unemployment data
+- 
+- **`1b-generate-bls-state-claims-csv-update.R`**: Generates BLS state claims
+  data using manually downloaded Advanced state claims data from
+  https://oui.doleta.gov/unemploy/claims.asp and the latest weeks numbers
+  reported in this BLS pdf thast updated weekly. This script uses AWS Textract
+  to perform OCR on the PDF tables so these output files should definitely be manually
+  checked. You can skip running this script if you manually update the
+  initial-claims-bls-state.csv by following  instructions in the
+  Manual Update section below. 
 
 - **`2a-job-loss-by-industry-wa-update.R`**: Uses data from the Washington State
   Employment Security Department - which provides estimates on a weekly basis of
@@ -66,7 +78,8 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
   in employment for every industry. Note that WA state data does not capture % change
   in employment, as it only includes unemployment claims, not new hires, but
   should be a decent proxy for relative job loss among industries in the short
-  term. Key output of this script is `job_change_wa_most_recent.csv`
+  term. Key output of this script is `job_change_wa_most_recent.csv`. Not necessary
+  for estimates using BLS CES data.
   
 - **`2b-job-loss-by-industry-bls-update.R`**: Uses the national Bureau of Labor
   Statistics (BLS) Current Employment Statistics (CES) dataset to generate the
@@ -80,23 +93,24 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
   Provides estimates on a weekly basis of unemployment claims by industry
   supersector, just like WA state, and estimates the percent change in employment
   for every industry. Same caveats and process as the WA state data. For how we 
-  apply it, see `2z-job-loss-by-industry-combine-states.R`.
+  apply it, see `2z-job-loss-by-industry-combine-states.R`. Not necessary for 
+  estimates using BLS CES data.
   
 - **`2y-job-loss-by-industry-combine-states.R`**: Combines all states 
   unemployment claims change data (currently WA and NY) into a single, weighted 
-  average industry job loss file. 
+  average industry job loss file. Not necessary for estimates using BLS CES data.
   
 - **`2z-job-loss-by-industry-by-state.R`**: Generates a job loss by industry by state file using 
-  the weighted average industry job loss file and BLS advance weekly claims data. State-industry job loss 
-  figures are based on the weighted average file, but are  up/downweighted by the BLS advance 
-  weekly claims data for higher accuracy within states. State level totals and job 
-  loss calculations come from the BLS advance weekly claims for the previous weeks, 
-  divided by the BLS QCEW data, to ensure we are using similar data as comparisons 
+  the weighted average industry job loss file (BLS beginning May 8) and BLS advance weekly 
+  claims data. State-industry job loss figures are based on the weighted average file, but are 
+  up/downweighted by the BLS advance weekly claims data for higher accuracy within states. State 
+  level totals and job loss calculations come from the BLS advance weekly claims for the previous 
+  weeks, divided by the BLS QCEW data, to ensure we are using similar data as comparisons 
   across files. A ratio of job loss in the state compared to job loss as a whole
   in the industry file is applied for each state to the industry estimates to
   produce a job loss by industry by state file. States with actual job loss by
-  industry data are applied as is (currently WA and NY). The key output file is 
-  `state_job_change_all_states_most_recent.csv`
+  industry data are applied as is (currently WA and NY) for updates before May 8. 
+  The key output file is `state_job_change_all_states_most_recent.csv`.
 
 - **`3-produce-data-files.R`**: Generates estimates of job loss by tract using 2017
   LODES data from the [Urban Institute Data
@@ -130,13 +144,33 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
   
 
 ## Manual Data Updates
-Because the New York State data and BLS state-level advanced claims are released in PDF format, we use a manual process to update those files, as follows:
+Because the New York State data and BLS state-level advanced claims are released
+in PDF format, we use a manual process to update those files, as follows:
 
-  1) Download the most recent BLS state-level advanced claims data from https://oui.doleta.gov/unemploy/claims.asp. Replace past weeks of data/raw-data/small/initial-claims-bls-state.xlsx with this data as they may have been updated.
+  1) Download the most recent NY state data from
+     https://labor.ny.gov/stats/weekly-ui-claims-report.shtm and add the 
+     current week of data as a new column to the sheet in 
+     `data/raw-data/small/ny-manual-input-data.xlsx.`
 
-  2) Convert the most recent PDF to excel from https://www.dol.gov/ui/data.pdf, and add the current week of data as a new column to the sheet in data/raw-data/small/initial-claims-bls-state.xlsx. Be sure that states line up - they may be in different orders in the PDF and the claims data spreadsheet.
+  If you don't run script 1b and/or don't have an AWS account to use Textract,
+  you need to perform these additional manual updates:
+  
+  2) Download the most recent BLS state-level advance claims data from
+     https://oui.doleta.gov/unemploy/claims.asp. On the page, select State >
+     2020-2021 > Spreadsheet > Submit. Once the Excel sheet downloads, open it,
+     and filter to the latest week in the `Filed week ended` column. The values in
+     the `Initial Claims` column are going to be a little different form the
+     values in `data/raw-data/small/initial-claims-bls-state.csv` as the BLS
+     updates the previous weeks numbers. You need to replace the old values in
+     `initial-claims-bls-state.csv` with the updated values from the 
+     `Initial Claims`  column of the downloaded excel sheet.
 
-  3) Download the most recent NY state data from https://labor.ny.gov/stats/weekly-ui-claims-report.shtm and add the current week of data as a new column to the sheet in data/raw-data/small/ny-manual-input-data.xlsx."
+  3) Add a column to `data/raw-data/small/initial-claims-bls-state.csv` for the
+     next week and manually fill in the new weeks numbers reported in this
+     pdf: [https://www.dol.gov/ui/data.pdf/](https://www.dol.gov/ui/data.pdf/) 
+     Be sure that states line up - they may be in different orders in the PDF
+     and the claims data spreadsheet.
+
 
 
 

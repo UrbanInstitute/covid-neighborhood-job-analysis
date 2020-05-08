@@ -1,0 +1,21 @@
+lehd_name,lodes_var,industry_code,total_employment,unemployment_totals,percent_change_employment
+"Agriculture, Forestry, Fishing, and Hunting",CNS01,11,124452,7143,-0.05739562240863948
+"Mining, Quarrying, and Oil and Gas Extractions",CNS02,21,2150,563,-0.2618604651162791
+Utilities,CNS03,22,19639,563,-0.02866744742604002
+Construction,CNS04,23,213420,87887,-0.41180301752413084
+Manufacturing,CNS05,31-33,308597,80138,-0.2596849612925595
+Wholesale Trade,CNS06,42,134647,23557,-0.1749537680007724
+Retail Trade,CNS07,44-45,387791,87144,-0.22471898522657824
+Transportation and Warehousing,CNS08,48-49,135169,19958,-0.1476521983590912
+Information,CNS09,51,152215,7638,-0.050179023092336496
+Finance and Insurance,CNS10,52,95425,4671,-0.04894943673041656
+Real Estate and Rental and Leasing,CNS11,53,59452,10570,-0.17779048644284465
+"Professional, Scientific, and Technical Services",CNS12,54,214193,20192,-0.09427012087229741
+Management of Companies and Enterprises,CNS13,55,44988,955,-0.02122788299101983
+Administrative and Support and Waste Management and Remediation Services,CNS14,56,180184,36578,-0.20300359632375795
+Educational Services,CNS15,61,268051,21687,-0.0809062454532906
+Health Care and Social Assistance,CNS16,62,491265,91790,-0.18684416760811376
+"Arts, Entertainment, and Recreation",CNS17,71,81011,33444,-0.41283282517189024
+Accomodation and Food Services,CNS18,72,295844,111830,-0.3780032719946999
+Other Services,CNS19,81,103213,37708,-0.36534157518917193
+Public Administration,CNS20,92,173852,8069,-0.04641304097738306
