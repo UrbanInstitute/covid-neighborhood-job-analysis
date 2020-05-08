@@ -96,25 +96,3 @@ transfer_all_files_to_s3 <- function(
 }
 
 transfer_all_files_to_s3()
-
-# #----AWS Setup--------------------------------------
-
-# # read in AWS secret keys
-# secret_keys <- read_csv("data/raw-data/small/secret_keys.csv")
-
-# # set keys
-# key <- secret_keys$`Access key ID`
-# secret_key <- secret_keys$`Secret access key`
-
-# # set bucket name
-# my_bucket_name <- "ui-lodes-job-change-public"
-
-
-# Sys.setenv(
-#     "AWS_ACCESS_KEY_ID" = key,
-#     "AWS_SECRET_ACCESS_KEY" = secret_key,
-#     "AWS_DEFAULT_REGION" = "us-east-1"
-# )
-
-
-# s3_filepath <- "data/processed-data/s3_final/"
