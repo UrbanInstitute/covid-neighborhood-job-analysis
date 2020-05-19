@@ -111,11 +111,12 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   job_change_corrected <- need_parent %>%
     left_join(parents, by = "series_id") %>%
     left_join(latest_parent_change, by = "parent_series_id") %>%
-    mutate(percent_change_imputed = parent_change_previous * parent_change_latest / percent_change_employment_previous)
+    mutate(percent_change_imputed = percent_change_employment_previous + parent_change_latest - parent_change_previous)
 
   # Bind together
   job_change_all_corrected <- job_change_corrected %>%
-    bind_rows(no_parent)
+    bind_rows(no_parent) %>%
+    select(series_id, reference, percent_change_imputed)
   
   ##----Write out data------------------------------------------------
 
@@ -130,8 +131,8 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
     write_csv("data/processed-data/job_change_ces_imputed_most_recent.csv")
 
 
-  return(job_change_led)
+  return(job_change_all_corrected)
 }
 
 
-job_change_led = generate_bls_percent_change_by_industry()
+job_change_all_corrected = generate_bls_percent_change_by_industry()
