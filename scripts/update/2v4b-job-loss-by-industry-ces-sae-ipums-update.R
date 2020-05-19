@@ -5,14 +5,11 @@
 
 
 library(tidyverse)
-library(jsonlite)
 library(testit)
 
 
-generate_bls_percent_change_by_industry = function(
-  start_month_bls = 2,
-  start_year_bls = 2020, 
-  ces_filepath = "data/raw-data/big/ces_all.txt",
+generate_bls_percent_change_by_industry = function(start_month_bls = 2,
+  start_year_bls = 2020, ces_filepath = "data/raw-data/big/ces_all.txt",
   sae_filepath = "data/raw-data/big/sae_all.txt"){
 
   # Function to generate bls percent change job loss by industry
@@ -55,15 +52,31 @@ generate_bls_percent_change_by_industry = function(
       filter(month == mo)
   }
   
-  # CES
+  # SAE
+  # Add relevant variables and filter
+  sae_data <- sae_all %>%
+    mutate(state = substr(series_id, 4, 5),
+           area = substr(series_id, 6, 10),
+           industry = substr(series_id, 11, 18),
+           datatype = substr(series_id, 19, 20),
+           seasonality = substr(series_id, 3, 3)) %>%
+    filter(area == "00000",
+           datatype == "01",
+           state != "72" & state != "78",
+           seasonality == "S")
+  
   # Filter data to latest month as one dataset, and initial comparison
   # month as another.
   # Latest month
-  ces_series_latest <- get_bls_time(ces_all, 0, 0)
-  latest_month <- max(ces_series_latest$month)
-  latest_year <- max(ces_series_latest$year)
+  sae_series_latest <- get_bls_time(sae_data, 0, 0)
+  # Subset to only those that have observations for all states
+  sae_data_all <- sae_series_latest %>%
+    group_by(industry) %>%
+    count()
+  latest_month <- max(sae_series_latest$month)
+  latest_year <- max(sae_series_latest$year)
   # Reference month
-  ces_series_reference <- get_bls_time(ces_all, start_year_bls, start_month_bls)
+  ces_series_reference <- get_bls_time(sae_data, start_year_bls, start_month_bls)
 
   # Function to remove and rename columns to prep for join
   join_prep <- function(df, col_name){

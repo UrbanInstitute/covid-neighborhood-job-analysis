@@ -8,7 +8,8 @@ library(testit)
 
 generate_bls_percent_change_by_industry = function(start_month_bls = 2,
     start_year_bls = 2020, ces_filepath = "data/raw-data/big/ces_all.txt",
-    acs_xwalk_filepath = "data/raw-data/small/2017-ind-ces-crosswalk.csv"){
+    acs_xwalk_filepath = "data/raw-data/small/2017-ind-ces-crosswalk.csv",
+    sae_xwalk_filepath = "data/raw-data/small/ces-sae-crosswalk.csv"){
 
   # Function to generate bls percent change job loss by industry for detailed
   # industries, projecting forward those a month old to the current month
@@ -27,12 +28,22 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   # Read in CES and crosswalk data
   acs_crosswalk <- read_csv(acs_xwalk_filepath)
   ces_all <- read_tsv(ces_filepath)
+  sae_xwalk <- read_csv(sae_xwalk_filepath,
+                        col_types = list(col_character(),
+                                         col_character(),
+                                         col_character()))
 
   ##----Generate % Change in employment-----------------------------------
 
+  # Add SAE series we'll need later
+  sae_xwalk_series <- sae_xwalk %>%
+    filter(!is.na(ces_code_2_digit)) %>%
+    mutate(series_id = str_glue("CES{ces_code_2_digit}01"))
+  
   # Specify only the series we are interested in:
   all_series <- unique(c(unique(acs_crosswalk$series_id),
-                  unique(acs_crosswalk$parent_series_id)))
+                  unique(acs_crosswalk$parent_series_id),
+                  unique(sae_xwalk_series$series_id)))
 
   # Subset CES data to only series we are interested in, and ensure all
   # of the values appear in the dataset
@@ -116,7 +127,13 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   # Bind together
   job_change_all_corrected <- job_change_corrected %>%
     bind_rows(no_parent) %>%
-    select(series_id, reference, percent_change_imputed)
+    select(series_id, reference, percent_change_employment_previous, percent_change_imputed)
+  
+  # Calculate all super industries to prep for next step for SAE crosswalk
+  job_change_for_sae <- job_change %>%
+    rename(percent_change_imputed = percent_change_employment_latest) %>%
+    select(series_id, reference, percent_change_employment_previous, percent_change_imputed) %>%
+    filter(series_id %in% sae_xwalk_series$series_id)
   
   ##----Write out data------------------------------------------------
 
@@ -130,7 +147,15 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   job_change_all_corrected %>%
     write_csv("data/processed-data/job_change_ces_imputed_most_recent.csv")
 
-
+  # Write out job change for SAE, for specific month year and most recent
+  
+  job_change_for_sae %>%
+    write_csv("data/processed-data/job_change_ces_for_sae_most_recent.csv")
+  job_change_for_sae %>%
+    write_csv(
+      str_glue("data/processed-data/job_change_ces_for_sae_{start_year_bls}_{start_month_bls}_to_{latest_year}_{latest_month}.csv")
+    )
+  
   return(job_change_all_corrected)
 }
 
