@@ -10,7 +10,10 @@ library(testit)
 
 generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   start_year_bls = 2020, ces_filepath = "data/raw-data/big/ces_all.txt",
-  sae_filepath = "data/raw-data/big/sae_all.txt"){
+  sae_filepath = "data/raw-data/big/sae_all.txt",
+  sae_xwalk_filepath = "data/raw-data/small/ces-sae-crosswalk.csv",
+  ces_estimates_filepath = "data/processed-data/job_change_ces_imputed_most_recent.csv",
+  sae_parent_filepath = "data/processed-data/job_change_ces_for_sae_most_recent.csv"){
 
   # Function to generate bls percent change job loss by industry
   # INPUT:
@@ -27,8 +30,13 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
 
 
   # Read in CES, SAE, and crosswalk data
-  ces_all <- read_tsv(ces_filepath)
   sae_all <- read_tsv(sae_filepath)
+  sae_xwalk <- read_csv(sae_xwalk_filepath,
+                        col_types = list(col_character(),
+                                         col_character(),
+                                         col_character()))
+  ces_estimates <- read_csv(ces_estimates_filepath)
+  sae_parents <- read_csv(sae_parent_filepath)
 
   ##----Generate % Change in employment-----------------------------------
 
@@ -69,14 +77,10 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   # month as another.
   # Latest month
   sae_series_latest <- get_bls_time(sae_data, 0, 0)
-  # Subset to only those that have observations for all states
-  sae_data_all <- sae_series_latest %>%
-    group_by(industry) %>%
-    count()
   latest_month <- max(sae_series_latest$month)
   latest_year <- max(sae_series_latest$year)
   # Reference month
-  ces_series_reference <- get_bls_time(sae_data, start_year_bls, start_month_bls)
+  sae_series_reference <- get_bls_time(sae_data, start_year_bls, start_month_bls)
 
   # Function to remove and rename columns to prep for join
   join_prep <- function(df, col_name){
@@ -86,23 +90,60 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   }
 
   # Remove and rename columns
-  ces_series_latest <- join_prep(ces_series_latest, "latest")
-  ces_series_reference <- join_prep(ces_series_reference, "reference")
+  sae_series_latest <- join_prep(sae_series_latest, "latest")
+  sae_series_reference <- join_prep(sae_series_reference, "reference")
 
   # Join data together and calculate % change
-  job_change <- ces_series_reference %>%
-                left_join(ces_series_latest, by = "series_id") %>%
-                mutate(percent_change_employment = latest / reference - 1)
+  job_change <- sae_series_reference %>%
+                left_join(sae_series_latest, by = "series_id") %>%
+                mutate(percent_change_employment = latest / reference - 1,
+                       state = substr(series_id, 4, 5),
+                       industry = substr(series_id, 11, 18))
 
-
-  # Add LED supersector codes
-  map_supersector <- function(series_id){
-    str_glue("CNS", lodes_crosswalk[substr(series_id, 4, 11)][[1]])
+  # For missing industry-state combinations, assign the parent from the crosswalk
+  industries <- job_change %>%
+    distinct(industry)
+  states <- job_change %>%
+    distinct(state)
+  missing_industries <- function(st){
+    # Function to take a state and return missing industries for that state
+    # Input: st, 2 digit FIPS
+    # Output: Dataframe with missing industries
+    job_change %>%
+      filter(state == st) %>%
+      full_join(industries, by = "industry") %>%
+      filter(is.na(series_id)) %>%
+      mutate(state = st)
   }
-  job_change_led <- job_change %>%
-                      mutate(lodes_var = series_id %>%
-                                              map_chr(map_supersector)) %>%
-                      arrange(lodes_var)
+  missing_state_industries <- unique(states$state) %>%
+    map(missing_industries) %>%
+    bind_rows() %>%
+    select(state, industry) %>%
+    rename(sae_code_2_digit = industry) %>%
+    left_join(sae_xwalk, by = "sae_code_2_digit") %>%
+    rename(industry = sae_code_2_digit_backup) %>%
+    left_join(job_change, by = c("state", "industry")) %>%
+    select(state, sae_code_2_digit, reference, latest, percent_change_employment) %>%
+    rename(industry = sae_code_2_digit) %>%
+    mutate(series_id = str_glue("SMS{state}00000{industry}01"))
+  job_change_all <- job_change %>%
+    bind_rows(missing_state_industries) %>%
+    arrange(series_id)
+  
+  # Merge with CES data, calculate ratio to parents
+  sae_parent_data <- sae_parents %>%
+    mutate(industry = substr(series_id, 4, 11)) %>%
+    rename(ces_reference = reference,
+           ces_previous = percent_change_employment_previous,
+           ces_latest = percent_change_imputed) %>%
+    select(-series_id)
+  ces_merge <- job_change_all %>%
+    left_join(sae_parent_data, by = "industry") %>%
+    filter(!is.na(ces_reference)) %>%
+    mutate(ces_to_sae_diff = ces_previous - percent_change_employment)
+  
+  # Merge with CES detailed industries and calculate state by CES industry estimate
+  
 
   ##----Write out data------------------------------------------------
 
