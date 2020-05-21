@@ -140,26 +140,72 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   ces_merge <- job_change_all %>%
     left_join(sae_parent_data, by = "industry") %>%
     filter(!is.na(ces_reference)) %>%
-    mutate(ces_to_sae_diff = ces_previous - percent_change_employment)
+    mutate(ces_to_sae_diff = ces_previous - percent_change_employment) %>%
+    rename(parent_industry = industry)
   
   # Merge with CES detailed industries and calculate state by CES industry estimate
+  # Function that replace the last non zero digit with 0s
+  # Input: 
+  #   - cstring, the string
+  #   - nz, non zero digits at the end of the string to replace
+  # Output: string with digits at the end replaced with 0s
+  replace_zeroes <- function(cstring, nz){
+    end <- substr(cstring, length(cstring) - 1, length(cstring))
+    while (end == "0"){
+      cstring <- substr(cstring, 1, length(cstring) - 1)
+      end <- substr(cstring, length(cstring) - 1, length(cstring))
+    }
+    rep_str <- substr(cstring, 1, str_length(cstring) - nz)
+    str_pad(rep_str, 8, "right", pad = "0")
+  }
   
+  # Function to take ces_code and replace last digit that's not a 0 with
+  # a zero, look for code matchin SAE, repeat until parent is found, return id
+  # Input: ces_code
+  # Output: ces_code with matchin SAE data
+  get_parent <- function(code_ces){
+    found_parent <- FALSE
+    num_zeroes <- 1
+    while (found_parent == FALSE){
+      test_ces <- replace_zeroes(code_ces, num_zeroes)
+      test_filter <- sae_xwalk %>%
+        filter(ces_code_2_digit == test_ces) %>%
+        nrow()
+      if (test_filter > 0){ found_parent = TRUE }
+      num_zeroes <- num_zeroes + 1
+    }
+    test_ces
+  }
+  
+  # Add SAE parent industry
+  ces_prep <- ces_estimates %>%
+    mutate(industry = substr(series_id, 4, 11)) %>%
+    mutate(parent_industry = industry %>% map_chr(get_parent))
+  ces_merge_sub <- ces_merge %>%
+    select(state, parent_industry, ces_to_sae_diff)
+  
+  # Merge and calculate estimates
+  ces_sae_estimates <- ces_merge_sub %>%
+    left_join(ces_prep, by = "parent_industry") %>%
+    mutate(percent_change_state_imputed = percent_change_imputed - ces_to_sae_diff) %>%
+    filter(!is.na(series_id)) %>%
+    select(state, industry, reference, percent_change_state_imputed)
 
   ##----Write out data------------------------------------------------
 
   # Write out job chage csv specific to latest month and year
-  job_change_led %>%
+  ces_sae_estimates %>%
     write_csv(
-      str_glue("data/processed-data/job_change_bls_{start_year_bls}_{start_month_bls}_to_{latest_year}_{latest_month}.csv")
+      str_glue("data/processed-data/job_change_sae_estimates_{start_year_bls}_{start_month_bls}_to_{latest_year}_{latest_month}.csv")
     )
 
   # Replace most recent bls job change csv
-  job_change_led %>%
-    write_csv("data/processed-data/job_change_bls_most_recent.csv")
+  ces_sae_estimates %>%
+    write_csv("data/processed-data/job_change_sae_estimates_most_recent.csv")
 
 
-  return(job_change_led)
+  return(ces_sae_estimates)
 }
 
 
-job_change_led = generate_bls_percent_change_by_industry()
+ces_sae_estimates = generate_bls_percent_change_by_industry()
