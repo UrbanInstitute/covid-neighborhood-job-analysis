@@ -10,12 +10,15 @@ library(testit)
 
 generate_acs_percent_change_by_industry = function(start_month_bls = 2,
   start_year_bls = 2020, sae_estimates_path = "data/processed-data/job_change_sae_estimates_most_recent.csv",
-  acs_xwalk_path = "data/raw-data/small/2017-ind-ces-crosswalk.csv"){
+  acs_xwalk_path = "data/raw-data/small/2017-ind-ces-crosswalk.csv",
+  latest_year = 2020, latest_month = 4){
   
   # Function to generate ACS job change by industry
   # INPUT:
   #   sae_estimates_path: path to file producing state and industry level job loss estimates
   #   acs_xwalk_path: path to crosswalk from CES industry to ACS industry
+  #   latest_year: latest year from 2v4b
+  #   latest_month: latest month from 2v4b
   # OUTPUT:
   # job_change_led: a dataframe, where every row is a unique state and ACS
   #   industry. This dataframe is the measure % change in net employment 
