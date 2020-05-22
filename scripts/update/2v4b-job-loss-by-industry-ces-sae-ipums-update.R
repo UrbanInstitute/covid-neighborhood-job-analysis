@@ -1,4 +1,4 @@
-# Calculate Job loss by LODES Industry Sector using BLS data
+# Calculate Job loss by CES detailed Industry Sector using BLS data
 # Uses new methodology combining CES, SAE, and IPUMS data
 # to create a PUMA-level estimate of job loss by 2-digit NAICS
 # Start running after June 5th instead of other "2" scripts
@@ -23,10 +23,13 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   #     1-download-data-update.R
   #   sae_filepath: Filepath to sae_all.txt file downloaded in by
   #     1-download-data-update.R
+  #   sae_xwalk_filepath: Filepath to the CES-SAE crosswalk
+  #   ces_estimates_filepath: Filpath to imputed CES data from previous step
+  #   sae_parent_filepath: Filepath to imputed CES for SAE parents from previous step
   # OUTPUT:
-  # job_change_led: a dataframe, where every row is a unique PUMA and 2-digit
-  #   NAICS industry. This dataframe is the measure % change in net employment 
-  #   for each PUMA-industry in relation to the start month and year
+  # job_change_led: a dataframe, where every row is a unique state and CES
+  #   industry. This dataframe is the measure % change in net employment 
+  #   for each state-industry in relation to the start month and year
 
 
   # Read in CES, SAE, and crosswalk data
