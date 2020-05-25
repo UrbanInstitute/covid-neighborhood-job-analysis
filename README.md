@@ -71,7 +71,30 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
   to perform OCR on the PDF tables so these output files should definitely be manually
   checked. You can skip running this script if you manually update the
   initial-claims-bls-state.csv by following  instructions in the
-  Manual Update section below. 
+  Manual Update section below.
+
+#### New Step 2 process, for June 5th update and later
+
+- **`2v4a-job-loss-projected-forward-ces.R`**: Uses BLS CES data from the latest month,
+  and for subsectors that are one month lagged, projects them forward using the change
+  from their parent sectors.
+
+- **`2v4b-job-loss-by-industry-ces-sae-ipums-update.R`**: Uses BLS SAE data and CES data
+  to project lagged state employment data forward one month, and uses the relationship
+  between previous month SAE to CES supersector data to project national level industry
+  job loss estimates down to the state level.
+
+- **`2v4c-job-loss-by-industry-ipums-update.R`**: Uses the CES to ACS crosswalk generated
+  manually here at Urban to summarize state by detailed CES industry calculations to state
+  by detailed ACS industry calculations.
+
+- **`2v4d-job-loss-by-industry-ipums-summary-update.R`**: Uses the state by detailed ACS
+  industry job loss estimates and merges with the most recent 5 year ACS (2014-18) microdata
+  from IPUMS USA to produce a microdata file that allows people to join with the ACS IPUMS
+  file and produce their own estimates. Also produces PUMA by 2-digit NAICS job loss estimates
+  for use in step 3.
+
+#### Older Step 2 process, for May 8th release and earlier
 
 - **`2a-job-loss-by-industry-wa-update.R`**: Uses data from the Washington State
   Employment Security Department - which provides estimates on a weekly basis of
@@ -113,11 +136,12 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
   industry data are applied as is (currently WA and NY) for updates before May 8. 
   The key output file is `state_job_change_all_states_most_recent.csv`.
 
+#### Resume similar process for all periods
+
 - **`3-produce-data-files.R`**: Generates estimates of job loss by tract using 2017
   LODES data from the [Urban Institute Data
   Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes),
-  and unemployment rates by industry generated in script `2a` (initial run), `2z` 
-  (subsequent updates in April) or `2b` (subsequent updates in May and beyond). 
+  and job loss change generated in scripts in step 2. 
   This file produces the main output used in the interactive data viz - 
   `job_loss_by_tract.geojson` which contains estimated job losses by industry for every
   tract in the US

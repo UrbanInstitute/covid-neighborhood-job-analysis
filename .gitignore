@@ -47,6 +47,9 @@ docs/
 # raw files
 data/raw-data/big/
 
+# ipums join files
+data/processed-data/ipums/
+
 # geojson files
 *.geojson
 
