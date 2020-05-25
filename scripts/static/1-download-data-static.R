@@ -89,3 +89,7 @@ dir.create("data/processed-data/s3_final", showWarnings = FALSE)
 clean_and_write_sf(my_cbsas, "data/raw-data/big/cbsas.geojson")
 clean_and_write_sf(my_counties, "data/raw-data/big/counties.geojson")
 clean_and_write_sf(my_states, "data/raw-data/big/states.geojson")
+
+# NOTE ON IPUMS: Must be manually downloaded to data/raw-data/big/ --------
+
+

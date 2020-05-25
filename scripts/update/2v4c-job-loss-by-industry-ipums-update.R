@@ -15,6 +15,8 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
   
   # Function to generate ACS job change by industry
   # INPUT:
+  #   start_month_bls: BLS month to use as baseline to measure job loss % change
+  #   start_year_bls: BLS year to use as baseline to measrue job loss % change
   #   sae_estimates_path: path to file producing state and industry level job loss estimates
   #   acs_xwalk_path: path to crosswalk from CES industry to ACS industry
   #   latest_year: latest year from 2v4b

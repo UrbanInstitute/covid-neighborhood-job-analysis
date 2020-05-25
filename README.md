@@ -22,6 +22,7 @@ child care support, or cash assistance - to those who need it most.
 - `testit`
 - `readxl`
 - `aws.s3`
+- `ipumsr`
 
 
 ## Directory Structure
@@ -171,8 +172,9 @@ in PDF format, we use a manual process to update those files, as follows:
      Be sure that states line up - they may be in different orders in the PDF
      and the claims data spreadsheet.
 
-
-
+  4) IPUMS data must be manually downloaded from the [IPUMS USA website](https://usa.ipums.org/usa/).
+     Data should be put in the `data/raw-data/big/` directory. We use 5-year 
+     2014-18 ACS for this analysis.
 
 ## Caveats
 
