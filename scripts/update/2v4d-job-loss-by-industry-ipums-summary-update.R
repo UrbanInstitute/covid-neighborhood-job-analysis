@@ -52,8 +52,9 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
            disemploy = ifelse((random_number < (1 + percent_change_state_imputed)) | EMPSTAT != 1,
                               0, 1),
            wage_level = ifelse(INCWAGE < 40000, 1, 0),
-           total_employment = PERWT * ifelse(EMPSTAT == 1, 1, 0),
-           total_disemployment = PERWT * disemploy)
+           is_employed = ifelse(EMPSTAT == 1, 1, 0),
+           total_employment = PERWT * is_employed,
+           total_disemployment = -total_employment * percent_change_state_imputed)
   
   # Prep for public writeout
   disemploy_file_public <- ipums_data_merge %>%
@@ -63,7 +64,7 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
   # Checks against national data here
   net_employment <- sum(ipums_data_merge$total_employment)
   print(str_glue("Net employment is {net_employment}"))
-  net_disemployment <- sum(ipums_data_merge$total_disemployment)
+  net_disemployment <- round(sum(ipums_data_merge$total_disemployment))
   print(str_glue("Net disemployment is {net_disemployment}"))
   net_li_employment <- ipums_data_merge %>% 
     filter(wage_level == 1) %>% 
@@ -73,7 +74,8 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
   net_li_disemployment <- ipums_data_merge %>% 
     filter(wage_level == 1) %>% 
     summarise(sum(total_disemployment)) %>% 
-    pull()
+    pull() %>%
+    round()
   print(str_glue("Net <$40k disemployment is {net_li_disemployment}"))
   
   # Get IPUMS estimates by 2-digit NAICS by PUMA for wages < $40k
@@ -83,7 +85,10 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
     summarise(total_employed_pre = sum(total_employment),
               total_unemployed_post = sum(total_disemployment)) %>%
     ungroup() %>%
-    mutate(percent_change_imputed = -total_unemployed_post / total_employed_pre)
+    mutate(percent_change_imputed = ifelse(total_employed_pre == 0,
+                                           0,
+                                           -total_unemployed_post / total_employed_pre)) %>%
+    filter(!is.na(led_code))
   
   # Potential opportunity to calculate MOE with file on next release
   

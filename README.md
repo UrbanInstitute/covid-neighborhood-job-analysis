@@ -207,6 +207,12 @@ For a complete list of caveats, see the technical appendix available from our
 
 See [changelog.md](https://github.com/UrbanInstitute/covid-neighborhood-job-analysis/blob/master/changelog.md) for recent changes and updates.
 
+## IPUMS USA Citation
+
+```
+Steven Ruggles, Sarah Flood, Ronald Goeken, Josiah Grover, Erin Meyer, Jose Pacas and Matthew Sobek. IPUMS USA: Version 10.0 [dataset]. Minneapolis, MN: IPUMS, 2020. https://doi.org/10.18128/D010.V10.0
+```
+
 ## Contact
 
 Contact Graham MacDonald at gmacdonald@urban.org
