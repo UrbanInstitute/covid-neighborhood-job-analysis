@@ -86,7 +86,8 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
 
 - **`2v4c-job-loss-by-industry-ipums-update.R`**: Uses the CES to ACS crosswalk generated
   manually here at Urban to summarize state by detailed CES industry calculations to state
-  by detailed ACS industry calculations.
+  by detailed ACS industry calculations. Crosswalk documentation and code may be found
+  here: https://github.com/UrbanInstitute/ipums-acs-naics-standardization. 
 
 - **`2v4d-job-loss-by-industry-ipums-summary-update.R`**: Uses the state by detailed ACS
   industry job loss estimates and merges with the most recent 5 year ACS (2014-18) microdata
