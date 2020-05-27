@@ -102,6 +102,24 @@ dir.create("data/processed-data/s3_final", showWarnings = FALSE)
 clean_and_write_sf(my_cbsas, "data/raw-data/big/cbsas.geojson")
 clean_and_write_sf(my_counties, "data/raw-data/big/counties.geojson")
 clean_and_write_sf(my_states, "data/raw-data/big/states.geojson")
-clean_and_write_sf(pumas, "data/raw-data/big/pumas.geojson")
+clean_and_write_sf(my_pumas, "data/raw-data/big/pumas.geojson")
 
+# Download population centers for 2010 tracts. Will be used in tract<> PUMA
+# crosswalk
+pop_centers_2010_urls <- str_glue("https://www2.census.gov/geo/docs/reference/cenpop2010/tract/CenPop2010_Mean_TR{state_fips}.txt")
+
+pop_centers_2010 <- map_df(
+  pop_centers_2010_urls,
+  read_csv,
+  col_types = cols(
+    STATEFP = col_character(),
+    COUNTYFP = col_character(),
+    TRACTCE = col_character(),
+    POPULATION = col_double(),
+    LATITUDE = col_double(),
+    LONGITUDE = col_double()
+  )
+)
+
+pop_centers_2010 %>% write_csv("data/raw-data/small/pop_centers_2010_tracts.csv")
 # NOTE ON IPUMS: Must be manually downloaded to data/raw-data/big/ --------
