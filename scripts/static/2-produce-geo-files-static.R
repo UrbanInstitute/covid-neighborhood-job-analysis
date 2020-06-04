@@ -128,7 +128,8 @@ my_intersections <- my_intersections %>%
 # add area of tract
 my_tracts_area <- my_tracts %>% 
   transmute(GEOID, tract_area = st_area(my_tracts)) %>% 
-  st_drop_geometry()
+  st_drop_geometry() %>% 
+  as_tibble()
 
 # calculate intersection area/tract area and filter to
 # only areas where intersection is over 99.5% of the tract's
@@ -137,10 +138,10 @@ my_tracts_area <- my_tracts %>%
 tract_cbsa_ints <- my_intersections %>% 
   st_drop_geometry() %>% 
   right_join(my_tracts_area, "GEOID") %>% 
+  as_tibble() %>% 
   mutate(perc = int_area / tract_area,
          perc = as.numeric(perc)) %>% 
-  filter(perc >= .995)
-
+  filter(perc >= .7)
 
 # Check tracts are not in multiple CBSAs
 assert("tracts are in multiple CBSAs", 
