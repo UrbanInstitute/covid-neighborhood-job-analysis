@@ -262,7 +262,11 @@ p_t_ints = st_join(
 # Make sure that all tracts are joined to a PUMA
 assert(nrow(p_t_ints %>% filter(is.na(puma_geoid))) == 0)
 
-puma_tract_xwalk = p_t_ints %>% st_drop_geometry()
+puma_tract_xwalk = p_t_ints %>% 
+st_drop_geometry() %>% 
+# Filter out tracts in Puerto Rico as we're not using for this project
+filter(!startsWith(puma_geoid, "72"))
+
 puma_tract_xwalk %>% write_csv("data/processed-data/puma_tract_xwalk.csv")
 
 # Old 1:many spatial join code. This turned out to be pretty hairy because there
