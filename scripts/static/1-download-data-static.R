@@ -53,18 +53,31 @@ download.file(
 )
 
 
-#----Download cbsas, counties, and states from tigris------------
+#----Download cbsas, counties,PUMA's and states from tigris------------
 
 # FIPS codes
-download.file(url = "https://www2.census.gov/programs-surveys/popest/geographies/2017/all-geocodes-v2017.xlsx",
-              destfile = "data/raw-data/big/fips.xlsx",
-              mode = "wb")
+download.file(
+  url = "https://www2.census.gov/programs-surveys/popest/geographies/2017/all-geocodes-v2017.xlsx",
+  destfile = "data/raw-data/big/fips.xlsx",
+  mode = "wb"
+)
 
-my_states <- states(cb = T) 
-my_cbsas<-core_based_statistical_areas(cb = T)
+my_states <- states(cb = T)
+my_cbsas <- core_based_statistical_areas(cb = T)
 
-my_counties <- counties(cb = T)
-my_counties_no_cb <- counties(cb = F)
+my_counties <- counties(cb = T, year = 2018)
+my_counties_no_cb <- counties(cb = F, year = 2018)
+
+my_pumas <- reduce(
+  map(state_fips, function(x) {
+    pumas(
+      state = x,
+      year = 2018
+    )
+  }),
+  rbind
+)
+
 
 # The CB (cartographic boundary files used for smoother mapping boundaries)
 # version of the tracts file doesn't have the full county name. So we pull the
@@ -89,3 +102,24 @@ dir.create("data/processed-data/s3_final", showWarnings = FALSE)
 clean_and_write_sf(my_cbsas, "data/raw-data/big/cbsas.geojson")
 clean_and_write_sf(my_counties, "data/raw-data/big/counties.geojson")
 clean_and_write_sf(my_states, "data/raw-data/big/states.geojson")
+clean_and_write_sf(my_pumas, "data/raw-data/big/pumas.geojson")
+
+# Download population centers for 2010 tracts. Will be used in tract<> PUMA
+# crosswalk
+pop_centers_2010_urls <- str_glue("https://www2.census.gov/geo/docs/reference/cenpop2010/tract/CenPop2010_Mean_TR{state_fips}.txt")
+
+pop_centers_2010 <- map_df(
+  pop_centers_2010_urls,
+  read_csv,
+  col_types = cols(
+    STATEFP = col_character(),
+    COUNTYFP = col_character(),
+    TRACTCE = col_character(),
+    POPULATION = col_double(),
+    LATITUDE = col_double(),
+    LONGITUDE = col_double()
+  )
+)
+
+pop_centers_2010 %>% write_csv("data/raw-data/small/pop_centers_2010_tracts.csv")
+# NOTE ON IPUMS: Must be manually downloaded to data/raw-data/big/ --------
