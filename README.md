@@ -13,6 +13,8 @@ We hope government support programs, and non-profit service providers use the
 web app and this data to more effectively dedicate resources - such as food,
 child care support, or cash assistance - to those who need it most.
 
+Note: Starting from 6/5/2020, we are using a new methodology to calculate job loss based on national BLS CES and SAE data, instead of QCEW data and individual state data. To see the scripts and data used in the old methodology, you van view the previous commits on the master branch
+
 ## Required R libraries
 
 - `tidyverse`
@@ -51,29 +53,18 @@ child care support, or cash assistance - to those who need it most.
 ## Description of Scripts
 
 ### `static/`
-- **`1-download-data.R`**: Downloads Census tract, state, and CBSA data for the analysis and Census [LODES](https://lehd.ces.census.gov/data/) data aggregated to the Census tract and available on the [Urban Data
+- **`1-download-data.R`**: Downloads Census tract, states, PUMA, and CBSA data for the analysis and Census [LODES](https://lehd.ces.census.gov/data/) data aggregated to the Census tract and available on the [Urban Data
   Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes)
 
 - **`2-produce-geo-files.R`**: Produces some intermediary geographic files including geojsons of all
-CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
+CBSA's tract, and counties in the US, a tract<>CBSA crosswalk, and a tract<>PUMA crosswalk
 
 - **`3-produce-data-files-static.R`**: Produces `lodes_joined.csv` from the Census LODES data which is listing of the number of low income workers in every tract-industry combination in the US
 
 - **`4-transfer-to-s3-static.R`**: Transfers a few static files to S3, mostly used in the data viz
 
 ### `update/`
-- **`1-download-data-update.R`**: Downloads BLS QCEW data for US, and WA state weekly unemployment data
-- 
-- **`1b-generate-bls-state-claims-csv-update.R`**: Generates BLS state claims
-  data using manually downloaded Advanced state claims data from
-  https://oui.doleta.gov/unemploy/claims.asp and the latest weeks numbers
-  reported in this BLS pdf thast updated weekly. This script uses AWS Textract
-  to perform OCR on the PDF tables so these output files should definitely be manually
-  checked. You can skip running this script if you manually update the
-  initial-claims-bls-state.csv by following  instructions in the
-  Manual Update section below.
-
-#### New Step 2 process, for June 5th update and later
+- **`1-download-data-update.R`**: Downloads current BLS CES and SAE data.
 
 - **`2v4a-job-loss-projected-forward-ces.R`**: Uses BLS CES data from the latest month,
   and for subsectors that are one month lagged, projects them forward using the change
@@ -95,55 +86,11 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
   file and produce their own estimates. Also produces PUMA by 2-digit NAICS job loss estimates
   for use in step 3.
 
-#### Older Step 2 process, for May 8th release and earlier
-
-- **`2a-job-loss-by-industry-wa-update.R`**: Uses data from the Washington State
-  Employment Security Department - which provides estimates on a weekly basis of
-  unemployment claims by industry supersector - to estimate the percent change
-  in employment for every industry. Note that WA state data does not capture % change
-  in employment, as it only includes unemployment claims, not new hires, but
-  should be a decent proxy for relative job loss among industries in the short
-  term. Key output of this script is `job_change_wa_most_recent.csv`. Not necessary
-  for estimates using BLS CES data.
-  
-- **`2b-job-loss-by-industry-bls-update.R`**: Uses the national Bureau of Labor
-  Statistics (BLS) Current Employment Statistics (CES) dataset to generate the
-  estimated percent changes in employment per industry.  Because stay at home
-  and other orders happened in a staggered fashion, and the CES reports for the
-  pay period includes the 12th of the previous month, we will not be using
-  this data until the May 8th BLS release.
-  
-- **`2c-job-loss-by-industry-ny.R`**: Uses data from the New York State Department
-  of Labor, manually transcribed from PDF to `data/raw-data/small/ny-manual-input-data.xlsx`.
-  Provides estimates on a weekly basis of unemployment claims by industry
-  supersector, just like WA state, and estimates the percent change in employment
-  for every industry. Same caveats and process as the WA state data. For how we 
-  apply it, see `2z-job-loss-by-industry-combine-states.R`. Not necessary for 
-  estimates using BLS CES data.
-  
-- **`2y-job-loss-by-industry-combine-states.R`**: Combines all states 
-  unemployment claims change data (currently WA and NY) into a single, weighted 
-  average industry job loss file. Not necessary for estimates using BLS CES data.
-  
-- **`2z-job-loss-by-industry-by-state.R`**: Generates a job loss by industry by state file using 
-  the weighted average industry job loss file (BLS beginning May 8) and BLS advance weekly 
-  claims data. State-industry job loss figures are based on the weighted average file, but are 
-  up/downweighted by the BLS advance weekly claims data for higher accuracy within states. State 
-  level totals and job loss calculations come from the BLS advance weekly claims for the previous 
-  weeks, divided by the BLS QCEW data, to ensure we are using similar data as comparisons 
-  across files. A ratio of job loss in the state compared to job loss as a whole
-  in the industry file is applied for each state to the industry estimates to
-  produce a job loss by industry by state file. States with actual job loss by
-  industry data are applied as is (currently WA and NY) for updates before May 8. 
-  The key output file is `state_job_change_all_states_most_recent.csv`.
-
-#### Resume similar process for all periods
-
 - **`3-produce-data-files.R`**: Generates estimates of job loss by tract using 2017
   LODES data from the [Urban Institute Data
   Catalog](https://datacatalog.urban.org/dataset/longitudinal-employer-household-dynamics-origin-destination-employment-statistics-lodes),
-  and job loss change generated in scripts in step 2. 
-  This file produces the main output used in the interactive data viz - 
+  and job loss per PUMA files generated with the scripts in step 2. This file produces
+  the main output used in the interactive data viz - 
   `job_loss_by_tract.geojson` which contains estimated job losses by industry for every
   tract in the US
        
@@ -168,39 +115,6 @@ CBSA's tract, and counties in the US, and a tract<>CBSA crosswalk
   this script transfers them to S3 in a publicly available bucket. Running this
   is completely optional and in most cases not needed.
   
-
-## Manual Data Updates
-Because the New York State data and BLS state-level advanced claims are released
-in PDF format, we use a manual process to update those files, as follows:
-
-  1) Download the most recent NY state data from
-     https://labor.ny.gov/stats/weekly-ui-claims-report.shtm and add the 
-     current week of data as a new column to the sheet in 
-     `data/raw-data/small/ny-manual-input-data.xlsx.`
-
-  If you don't run script 1b and/or don't have an AWS account to use Textract,
-  you need to perform these additional manual updates:
-  
-  2) Download the most recent BLS state-level advance claims data from
-     https://oui.doleta.gov/unemploy/claims.asp. On the page, select State >
-     2020-2021 > Spreadsheet > Submit. Once the Excel sheet downloads, open it,
-     and filter to the latest week in the `Filed week ended` column. The values in
-     the `Initial Claims` column are going to be a little different form the
-     values in `data/raw-data/small/initial-claims-bls-state.csv` as the BLS
-     updates the previous weeks numbers. You need to replace the old values in
-     `initial-claims-bls-state.csv` with the updated values from the 
-     `Initial Claims`  column of the downloaded excel sheet.
-
-  3) Add a column to `data/raw-data/small/initial-claims-bls-state.csv` for the
-     next week and manually fill in the new weeks numbers reported in this
-     pdf: [https://www.dol.gov/ui/data.pdf/](https://www.dol.gov/ui/data.pdf/) 
-     Be sure that states line up - they may be in different orders in the PDF
-     and the claims data spreadsheet.
-
-  4) IPUMS data must be manually downloaded from the [IPUMS USA website](https://usa.ipums.org/usa/).
-     Data should be put in the `data/raw-data/big/` directory. We use 5-year 
-     2014-18 ACS for this analysis.
-
 ## Caveats
 
 For a complete list of caveats, see the technical appendix available from our
