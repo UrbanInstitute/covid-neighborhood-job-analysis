@@ -93,6 +93,15 @@ transfer_all_files_to_s3 <- function(
         "reshaped/sum_job_loss_us.json",
         my_bucket_name
     )
+    
+    # put IPUMS disemployment file in root directory
+    put_object(
+        file = paste0("data/processed-data/ipums/ipums_2014_18_disemployment_most_recent.csv"),
+        "ipums_2014_18_disemployment_most_recent.csv",
+        my_bucket_name
+    )
+    
+    
 }
 
 transfer_all_files_to_s3()
