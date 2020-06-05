@@ -106,6 +106,11 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
     mutate(percent_change_imputed = percent_change_employment_latest)
 
   # Add parent series and correct
+  # AN: Left join below is hard to read, why not:
+  # parents <- acs_crosswalk %>% 
+  #   filter(series_id %in% (parent_list %>% pull(series_id))) %>% 
+  #   distinct(series_id, parent_series_id)
+  
   parents <- need_parent %>%
     left_join(acs_crosswalk %>%
                 filter(recency == 1) %>%
@@ -118,7 +123,7 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
            parent_change_latest = percent_change_employment_latest,
            parent_change_previous = percent_change_employment_previous)
   assert("All parents should have change data, if not need to check ACS crosswalk",
-         latest_parent_change %>% filter(is.na(parent_change_latest)) %>% count() == 0)
+         latest_parent_change %>% filter(is.na(parent_change_latest)) %>% nrow() == 0)
   job_change_corrected <- need_parent %>%
     left_join(parents, by = "series_id") %>%
     left_join(latest_parent_change, by = "parent_series_id") %>%
