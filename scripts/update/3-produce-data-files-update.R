@@ -251,6 +251,7 @@ write_county_sums_raw <- function(job_loss_wide_sf) {
     county_sums <- job_loss_wide_sf %>%
         # drop spatial features
         st_drop_geometry() %>%
+        as_tibble() %>% 
         # ensure no missing counties
         filter(!is.na(county_fips)) %>%
         # cast county as character to avoid warnings
@@ -258,7 +259,7 @@ write_county_sums_raw <- function(job_loss_wide_sf) {
         # group by the county
         group_by(county_fips) %>%
         # aggregate industry job loss values to county
-        summarise_at(.vars = vars(starts_with("X") | starts_with("total_li_workers_employed")), ~ sum(.)) %>%
+        summarise_at(.vars = vars(X01:X000, total_li_workers_employed), ~ sum(.)) %>%
         ungroup() %>%
         # add total unemployment rate
         mutate(low_income_worker_job_loss_rate = round(X000 / total_li_workers_employed, 5)) %>%
@@ -271,6 +272,7 @@ write_cbsa_sums_raw <- function(job_loss_wide_sf) {
     cbsa_sums <- job_loss_wide_sf %>%
         # drop spatial features
         st_drop_geometry() %>%
+        as_tibble() %>% 
         # ensure no missing cbsas
         filter(!is.na(cbsa)) %>%
         # cast cbsa as character to avoid warning
@@ -278,7 +280,7 @@ write_cbsa_sums_raw <- function(job_loss_wide_sf) {
         # group by the cbsa
         group_by(cbsa) %>%
         # aggregate industry job loss values to cbsa
-        summarise_at(.vars = vars(starts_with("X") | starts_with("total_li_workers_employed")), ~ sum(.)) %>%
+        summarise_at(.vars = vars(X01:X000, total_li_workers_employed), ~ sum(.)) %>%
         ungroup() %>%
         # add total unemployment rate
         mutate(low_income_worker_job_loss_rate = round(X000 / total_li_workers_employed, 5)) %>%
