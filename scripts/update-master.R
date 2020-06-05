@@ -14,8 +14,8 @@ dryrun <- FALSE
 
 # Set bin values for legend bins and histograms. The histogram needs to be
 # manually reviewd and may need to change these values
-tmax_bins <- c(100, 150, 200, 250, 1050)
-max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 10000, 275000)
+tmax_bins <- c(100, 150, 200, 250, 850)
+max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 10000, 350000)
 
 
 
