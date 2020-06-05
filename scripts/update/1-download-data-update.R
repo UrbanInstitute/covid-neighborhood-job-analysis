@@ -94,9 +94,9 @@ update_wa_unemp_data <- function(week_num) {
 #----- Download all BLS data-----------
 update_bls_ces_data("https://download.bls.gov/pub/time.series/ce/ce.data.0.AllCESSeries")
 update_bls_sae_data("https://download.bls.gov/pub/time.series/sm/sm.data.1.AllData")
-update_wa_ny_qcew_data("https://data.bls.gov/cew/data/files/2019/csv/2019_qtrly_by_area.zip")
-update_all_us_qcew_data("https://data.bls.gov/cew/data/files/2019/xls/2019_all_county_high_level.zip")
+# update_wa_ny_qcew_data("https://data.bls.gov/cew/data/files/2019/csv/2019_qtrly_by_area.zip")
+# update_all_us_qcew_data("https://data.bls.gov/cew/data/files/2019/xls/2019_all_county_high_level.zip")
 
 #----- Download updated WA data-----------
 # Note week_num should be set in master file and this env should have access to it
-update_wa_unemp_data(week_num_wa)
+# update_wa_unemp_data(week_num_wa)
