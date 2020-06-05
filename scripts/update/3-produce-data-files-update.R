@@ -68,7 +68,7 @@ generate_job_loss_by_tract <- function(
         # one led code, so this is not a problem
         summarize(total_employment = sum(total_employed_pre),
                   total_unemployed = sum(total_unemployed_post),
-                  percent_change_employment = total_unemployed/total_employment,
+                  percent_change_employment = - total_unemployed/total_employment,
                   puma = first(puma),
                   state = first(state),
                   state_imputation = first(state_imputation)) %>% 
@@ -291,4 +291,5 @@ write_cbsa_sums_raw <- function(job_loss_wide_sf) {
 job_loss_wide_sf <- generate_job_loss_by_tract()
 
 write_county_sums_raw(job_loss_wide_sf)
-write_cbsa_sums_raw(job_loss_wide_sf)
+write_cbsa_sums_raw(job_loss_wide_sf) 
+
