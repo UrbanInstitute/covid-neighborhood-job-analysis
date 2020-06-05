@@ -8,29 +8,27 @@ library(testit)
 
 
 generate_job_loss_by_tract <- function(
-                                       state_job_change_filepath = "data/processed-data/state_job_change_all_states_most_recent.csv") {
+    puma_job_change_filpath = "data/processed-data/job_change_ipums_estimates_most_recent.csv") {
     # Function to generate job loss estimates by tract
     # INPUT
-    # state_job_change_filepath: filepath to state_job_change csv outputted by
-    #   generate_state_adjusted_job_loss_nums function
+    # puma_job_change_filepath: filepath to puma_job_change csv outputted by
+    #   job-loss-by-industry-ipums-update.R script
 
 
     #----Read in Data----------------------------------------------------
-    # Read in % change employment estimates by state
-    job_loss_estimates_by_state <-
-        read_csv(state_job_change_filepath) %>%
-        transmute(
-            lodes_var = tolower(lodes_var),
-            percent_change_employment = percent_change_employment_st,
-            state,
-            state_fips
-        )
 
-    # Read in industry to lodes xwalk, to put names to lodes industries
+    # Read in NAICS to led crosswalk
+    naics_led_xwalk = read_csv("data/raw-data/small/naics-to-led.csv")
+
+    # Read in industry name to led xwalk, to get names to lodes industries
     lehd_types <- read_csv("data/raw-data/small/lehd_types.csv")
 
-    # Read in geography crosswalk from trct to county to cbsa
-    trct_cty_cbsa_xwalk <- read_csv("data/processed-data/tract_county_cbsa_xwalk.csv")
+    # Read in crosswalk from tract (and county) to cbsa
+    puma_tract_xwalk <- read_csv("data/processed-data/puma_tract_xwalk.csv") %>% 
+        select(trct = GEOID, puma_geoid, puma_name)
+
+    # Read in crosswalk from tract to PUMA
+    trct_cty_cbsa_xwalk <- read_csv("data/processed-data/tract_county_cbsa_xwalk.csv") 
 
     # Read in states data
     states_data <- st_read("data/raw-data/big/states.geojson") %>%
@@ -44,19 +42,59 @@ generate_job_loss_by_tract <- function(
     lodes_joined <- read_csv("data/processed-data/lodes_joined.csv") %>%
         mutate(state_fips = substr(trct, 1, 2))
 
-    #----Generate job loss estimates for all tracts-----------------------------------
 
+    #-----Generate % change employment estimates by puma and led code (ie lodes_var)
+    job_loss_estimates_by_puma <-
+        # Read in % change employment numbers by puma and naics code
+        read_csv(puma_job_change_filpath) %>%
+        transmute(
+            naics_code = led_code,
+            state,
+            puma,
+            puma_geoid = paste0(state, puma),
+            total_employed_pre, 
+            total_unemployed_post,
+            percent_change_employment = percent_change_imputed,
+            state_imputation) %>% 
+            # left join naics code to Census led codes
+            left_join(naics_led_xwalk, by = "naics_code") %>%
+        # A few lodes variables are mapped to more than one naics code, 
+        # so group by puma and lodes var and recalculate percent change in employment
+        group_by(puma_geoid, lodes_var) %>% 
+        # Note this methodology may be a problem for the missing puma-industry
+        # combinations as those employment numbers are imputed from the
+        # state-industry combinations. But we've manually confirmed that the
+        # missing combinations occur in naics industry which are mapped to only
+        # one led code, so this is not a problem
+        summarize(total_employment = sum(total_employed_pre),
+                  total_unemployed = sum(total_unemployed_post),
+                  percent_change_employment = total_unemployed/total_employment,
+                  puma = first(puma),
+                  state = first(state),
+                  state_imputation = first(state_imputation)) %>% 
+        ungroup() %>% 
+        # Sometimes when num and den are 0, % is returned as NaN, we change to 0
+        mutate(percent_change_employment = replace_na(percent_change_employment, 0),
+                lodes_var = paste0('cns', lodes_var))      
+    
+    assert("All Puma-lodes industry combinations are represnted in job loss file",
+        nrow(job_loss_estimates_by_puma) == 47020)
+
+    
+    #----Generate job loss estimates for all tracts-----------------------------------
     # Generate job loss estimates for each industry across all tracts.
     # Every rown in job_loss_long is a tract-industry combo
     job_loss_long <- lodes_joined %>%
-        # keep only industry variables
+        # Append PUMA for each tract using puma tract crosswalk
+        left_join(puma_tract_xwalk, by = "trct") %>% 
+        # keep only led industry variables
         filter(startsWith(variable, "cns")) %>%
         # join lodes total employment data to % change in
         # employment estimates from WA or BLS
-        left_join(job_loss_estimates_by_state,
+        left_join(job_loss_estimates_by_puma,
             by = c(
                 "variable" = "lodes_var",
-                "state_fips" = "state_fips"
+                "puma_geoid" = "puma_geoid"
             )
         ) %>%
         # multiply number of jobs in industry by the % change unemployment for that industry
@@ -65,7 +103,7 @@ generate_job_loss_by_tract <- function(
             ind_var = paste0("X", str_remove(variable, "cns"))
         )
 
-    # Get total low income workers by tract. This will be used for CSV writouet to Data Portal
+    # Get total low income workers by tract. This will be used for CSV writeout to Data Portal
     # This number was requested by some users who wanted li unemployment rates by county/state,etc
     li_employment_by_tract <- job_loss_long %>%
         group_by(trct) %>%
@@ -74,7 +112,7 @@ generate_job_loss_by_tract <- function(
     # Generate job loss estimates for each tract. Industry vars are now columns,
     # Every row in job_loss_wide is a tract
     job_loss_wide <- job_loss_long %>%
-        select(-value, -year, -percent_change_employment, -variable) %>%
+        select(ind_var, job_loss_in_industry, trct) %>%
         # pivot wide to go from row=tract-industry  to row=tract
         pivot_wider(names_from = ind_var, values_from = job_loss_in_industry, id_cols = trct) %>%
         # sum all jobs lost across all industries for total job loss per tract
@@ -132,7 +170,7 @@ generate_job_loss_by_tract <- function(
         nrow(job_loss_wide_sf) == nrow(job_loss_wide)
     )
     assert(
-        "job_loss_wide_sf has differnt GEOIDS compared to job_loss_wide",
+        "job_loss_wide_sf has different GEOIDS compared to job_loss_wide",
         all.equal(
             job_loss_wide %>%
                 arrange(trct) %>%
