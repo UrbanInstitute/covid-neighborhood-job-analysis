@@ -98,7 +98,7 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
       ipums_estimates %>% select(state, puma) %>% distinct() %>% nrow() == 2351)
   
   # Get IPUMS estimates by 2-digit NAICS by State for wages < $40k
-  ipums_state_estimates =  ipums_data_merge %>% 
+  ipums_state_estimates <- ipums_data_merge %>% 
     filter(wage_level == 1) %>%
     group_by(state, led_code) %>%
     summarise(total_employed_pre = sum(total_employment),
@@ -110,7 +110,7 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
     filter(!is.na(led_code))
 
   # Get list of all puma industry combinations (2351 pumas * 24 industries)
-  all_puma_industry_combinations = ipums_estimates %>% 
+  all_puma_industry_combinations <- ipums_estimates %>% 
     select(state, puma) %>%
     distinct() %>% 
     expand_grid(led_code = ipums_estimates %>% pull(led_code) %>% unique()) %>% 
@@ -124,20 +124,20 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
 
   # Get missing puma_industry combination (1292 of them) and substitute in their
   # state-industry values 
-  missing_puma_industry_combos = all_puma_industry_combinations %>% 
+  missing_puma_industry_combos <- all_puma_industry_combinations %>% 
       # There are 1,292 puma-industry combinations which are missing 
       anti_join(ipums_estimates, by = c("state", "puma", "led_code")) %>% 
       left_join(ipums_state_estimates, by = c("state", "led_code")) %>% 
       mutate(state_imputation = 1)
 
   # Get existimg puma_industry combinations and use their real values
-  existing_puma_industry_combos = all_puma_industry_combinations %>% 
+  existing_puma_industry_combos <- all_puma_industry_combinations %>% 
       inner_join(ipums_estimates, by = c("state", "puma", "led_code"))  %>% 
       mutate(state_imputation = 0)
 
 
   # Bind existing and imputed puma-industry combinations together
-  ipums_puma_estimates = bind_rows(existing_puma_industry_combos, 
+  ipums_puma_estimates <- bind_rows(existing_puma_industry_combos, 
   missing_puma_industry_combos)
 
   assert("All rows in puma-industry job loss file are unique ", 
@@ -168,6 +168,11 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
     write_csv(
       str_glue("data/processed-data/ipums/ipums_{ipums_vintage}_disemployment_most_recent.csv")
     )
+  
+  # Write out full file for analysis, for those interested. Don't need this in 
+  # production pipeline, though, so commented out
+  # ipums_data_merge %>%
+  #   write_csv("data/processed-data/ipums/ipums_data_full_latest.csv")
   
   # Write out job change csv specific to latest month and year
   ipums_puma_estimates %>%
