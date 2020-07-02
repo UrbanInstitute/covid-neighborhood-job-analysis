@@ -13,9 +13,9 @@ static <- FALSE
 dryrun <- FALSE
 
 # Set bin values for legend bins and histograms. The histogram needs to be
-# manually reviewd and may need to change these values
-tmax_bins <- c(100, 150, 200, 250, 850)
-max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 10000, 350000)
+# manually reviewed and may need to change these values
+tmax_bins <- c(100, 150, 200, 250, 650)
+max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 10000, 275000)
 
 
 
@@ -42,3 +42,5 @@ source("scripts\\update\\5-create-sum-files-update.R", encoding = "UTF-8")
 if (!dryrun) {
     source("scripts\\update\\6-transfer-to-s3-update.R", encoding = "UTF-8")
 }
+
+

@@ -227,6 +227,21 @@ generate_county_cbsa_sum_files <- function(tmax_bins = tmax_bins,
         select(GEOID, everything())
 
     us_sums %>% write_csv("data/processed-data/s3_final/sum_job_loss_us.csv")
+    
+    #----Print out top CBSA/counties for manual checks------------------
+    cbsa_sums %>% 
+        st_drop_geometry() %>% 
+        arrange(desc(X000)) %>% 
+        select(cbsa_name, X000) %>% 
+        slice(1:10) %>% 
+        print()
+    
+    county_sums %>% 
+        st_drop_geometry() %>% 
+        arrange(desc(X000)) %>% 
+        select(county_name, state_name, X000) %>% 
+        slice(1:10) %>% 
+        print()
 
 
     #----Write out reshaped JSONS for D3 viz ------------------------------

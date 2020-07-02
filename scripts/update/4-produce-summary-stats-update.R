@@ -208,19 +208,7 @@ generate_all_histograms = function(tmax_bins, max_bins){
 write_histograms_to_s3 = function(
     my_bucket_name = "ui-lodes-job-change-public"){
 
-    #----Set AWS credentials-------------------------------------
-    # read in AWS secret keys
-    secret_keys <- read_csv("data/raw-data/small/secret_keys.csv")
 
-    # set keys
-    key <- secret_keys$`Access key ID`
-    secret_key <- secret_keys$`Secret access key`
-
-    Sys.setenv(
-    "AWS_ACCESS_KEY_ID" = key,
-    "AWS_SECRET_ACCESS_KEY" = secret_key,
-    "AWS_DEFAULT_REGION" = "us-east-1"
-    )
 
     s3_filepath <- "data/processed-data/s3_final/"
 

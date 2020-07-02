@@ -6,18 +6,13 @@ transfer_all_files_to_s3 <- function(
                                      my_bucket_name = "ui-lodes-job-change-public") {
     #----AWS Setup--------------------------------------
 
-    # Read in AWS secret keys
-    secret_keys <- read_csv("data/raw-data/small/secret_keys.csv")
-
-    # Set keys
-    key <- secret_keys$`Access key ID`
-    secret_key <- secret_keys$`Secret access key`
-
-    Sys.setenv(
-        "AWS_ACCESS_KEY_ID" = key,
-        "AWS_SECRET_ACCESS_KEY" = secret_key,
-        "AWS_DEFAULT_REGION" = "us-east-1"
-    )
+    # Note you will need to have the following environment variables accessible
+    # to R. 
+    #  "AWS_ACCESS_KEY_ID" 
+    #  "AWS_SECRET_ACCESS_KEY" 
+    #  "AWS_DEFAULT_REGION" 
+    # And the user associated with this access and secret access key needs write
+    # access to the ui-lodes-job-change-public bucket.
 
     s3_filepath <- "data/processed-data/s3_final/"
 
