@@ -28,10 +28,24 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   # Read in CES and crosswalk data
   acs_crosswalk <- read_csv(acs_xwalk_filepath)
   ces_all <- read_tsv(ces_filepath)
+  
+  if(!"series_id" %in% names(ces_all)){
+    ces_all <- read_tsv(ces_filepath,
+                        # sometimes headers are stripped by BLS perhaps on
+                        # accident. So we specify ourselves
+                        col_names = c("series_id", "year", "period", 
+                                      "value", "footnote_codes") )
+    
+    
+  }
   sae_xwalk <- read_csv(sae_xwalk_filepath,
                         col_types = list(col_character(),
                                          col_character(),
                                          col_character()))
+  
+  # Make sure there are no NA's in the CES series ids
+  assert(ces_all %>% filter(is.na(series_id)) %>% nrow == 0)
+
 
   ##----Generate % Change in employment-----------------------------------
 
@@ -49,6 +63,8 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   # of the values appear in the dataset
   ces_series_subset <- ces_all %>% 
                         filter(series_id %in% all_series)
+  
+
   assert(length(unique(ces_series_subset$series_id)) == 
           length(all_series) - 1)
 
@@ -165,4 +181,6 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
 }
 
 
-job_change_all_corrected = generate_bls_percent_change_by_industry()
+job_change_all_corrected = generate_bls_percent_change_by_industry(
+  ces_filepath = "data/raw-data/big/ces_all_modified.txt"
+  )
