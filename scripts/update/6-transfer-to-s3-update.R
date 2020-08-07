@@ -7,7 +7,9 @@ transfer_all_files_to_s3 <- function(
     #----AWS Setup--------------------------------------
 
     # Note you will need to have the following environment variables accessible
-    # to R. 
+    # to R. See this AWS help page for correctly setting env variables on your
+    # OS: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+    
     #  "AWS_ACCESS_KEY_ID" 
     #  "AWS_SECRET_ACCESS_KEY" 
     #  "AWS_DEFAULT_REGION" 
