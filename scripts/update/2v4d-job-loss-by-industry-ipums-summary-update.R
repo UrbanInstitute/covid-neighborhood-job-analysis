@@ -66,17 +66,6 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
   print(str_glue("Net employment is {net_employment}"))
   net_disemployment <- round(sum(ipums_data_merge$total_disemployment))
   print(str_glue("Net disemployment is {net_disemployment}"))
-  net_li_employment <- ipums_data_merge %>% 
-    filter(wage_level == 1) %>% 
-    summarise(sum(total_employment)) %>% 
-    pull()
-  print(str_glue("Net <$40k employment is {net_li_employment}"))
-  net_li_disemployment <- ipums_data_merge %>% 
-    filter(wage_level == 1) %>% 
-    summarise(sum(total_disemployment)) %>% 
-    pull() %>%
-    round()
-  print(str_glue("Net <$40k disemployment is {net_li_disemployment}"))
   
   # Get IPUMS estimates by 2-digit NAICS by PUMA for wages < $40k
   ipums_estimates <- ipums_data_merge %>%
@@ -84,7 +73,6 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
     # individuals, meaning those PUMA-industry combinations disappear from our
     # estimates. To fill in these gaps, we use the  statewide industry job loss
     # percentages for that particular missing industry
-    filter(wage_level == 1) %>%
     group_by(state, puma, led_code) %>%
     summarise(total_employed_pre = sum(total_employment),
               total_unemployed_post = sum(total_disemployment)) %>%
@@ -97,9 +85,8 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
     assert("IPUMS extract has all PUMA's in the continental US",
       ipums_estimates %>% select(state, puma) %>% distinct() %>% nrow() == 2351)
   
-  # Get IPUMS estimates by 2-digit NAICS by State for wages < $40k
+  # Get IPUMS estimates by 2-digit NAICS by State
   ipums_state_estimates <- ipums_data_merge %>% 
-    filter(wage_level == 1) %>%
     group_by(state, led_code) %>%
     summarise(total_employed_pre = sum(total_employment),
               total_unemployed_post = sum(total_disemployment)) %>%
@@ -119,7 +106,6 @@ generate_acs_percent_change_by_industry = function(start_month_bls = 2,
 
   assert("Expanded puma-industry list has right number of combinations",
         nrow(all_puma_industry_combinations) == 56424)
-
 
 
   # Get missing puma_industry combination (1292 of them) and substitute in their

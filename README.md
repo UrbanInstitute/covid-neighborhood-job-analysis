@@ -13,7 +13,12 @@ We hope government support programs, and non-profit service providers use the
 web app and this data to more effectively dedicate resources - such as food,
 child care support, or cash assistance - to those who need it most.
 
-Note: Starting from 6/5/2020, we are using a new methodology to calculate job loss based on national BLS CES and SAE data, instead of QCEW data and individual state data. To see the scripts and data used in the old methodology, you van view the previous commits on the master branch
+Note: Starting from 6/5/2020, we are using a new methodology to calculate job loss based on national BLS CES and SAE data, instead of QCEW data and individual state data. To see the scripts and data used in the old methodology, you van view the previous commits on the master branch. You will need to download the ACS 2014-18 5-year IPUMS data extract, and the accompanying xml file (DDI), from IPUMS USA into the `data/raw-data/big/` folder to replicate this analysis. The following variables are recommended as part of the extract:
+
+```
+YEAR, MULTYEAR, SAMPLE, SERIAL, CBSERIAL, HHWT, CLUSTER, STATEFIP, COUNTYFIP, PUMA, STRATA, GQ, PERNUM,
+PERWT, SEX, AGE, LABFORCE, IND, INDNAICS, INCTOT, FTOTINC, INCWAGE
+```
 
 ## Required R libraries
 

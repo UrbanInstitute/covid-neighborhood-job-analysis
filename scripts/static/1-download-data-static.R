@@ -46,13 +46,6 @@ download.file(
   destfile = "data/raw-data/big/rac_all.csv"
 )
 
-# All jobs, RAC, >=$40,000 per year
-download.file(
-  url = "https://urban-data-catalog.s3.amazonaws.com/drupal-root-live/2020/03/30/rac_se03_tract.csv",
-  destfile = "data/raw-data/big/rac_se03.csv"
-)
-
-
 #----Download cbsas, counties,PUMA's and states from tigris------------
 
 # FIPS codes
