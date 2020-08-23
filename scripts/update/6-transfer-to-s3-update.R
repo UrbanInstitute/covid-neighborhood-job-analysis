@@ -23,7 +23,7 @@ transfer_all_files_to_s3 <- function(
     # put tract job loss geojson in root directory
     put_object(
         file = paste0(s3_filepath, "job_loss_by_tract.geojson"),
-        object = "job_loss_by_tract.geojson",
+        object = "all_jobs_job_loss_by_tract.geojson",
         bucket = my_bucket_name,
         multipart = F
     )
@@ -31,21 +31,21 @@ transfer_all_files_to_s3 <- function(
     # put sum county summaries geojson in root directory
     put_object(
         paste0(s3_filepath, "sum_job_loss_county.geojson"),
-        "sum_job_loss_county.geojson",
+        "all_jobs_sum_job_loss_county.geojson",
         my_bucket_name
     )
 
     # put sum cbsa summaries geojson in root directory
     put_object(
         paste0(s3_filepath, "sum_job_loss_cbsa.geojson"),
-        "sum_job_loss_cbsa.geojson",
+        "all_jobs_sum_job_loss_cbsa.geojson",
         my_bucket_name
     )
 
     # put tract job loss csv in root directory
     put_object(
         file = paste0(s3_filepath, "job_loss_by_tract.csv"),
-        object = "job_loss_by_tract.csv",
+        object = "all_jobs_job_loss_by_tract.csv",
         bucket = my_bucket_name,
         multipart = F
     )
@@ -54,47 +54,47 @@ transfer_all_files_to_s3 <- function(
     # put sum county summaries csv in root directory
     put_object(
         paste0(s3_filepath, "sum_job_loss_county.csv"),
-        "sum_job_loss_county.csv",
+        "all_jobs_sum_job_loss_county.csv",
         my_bucket_name
     )
 
     # put sum cbsa summaries csv in root directory
     put_object(
         paste0(s3_filepath, "sum_job_loss_cbsa.csv"),
-        "sum_job_loss_cbsa.csv",
+        "all_jobs_sum_job_loss_cbsa.csv",
         my_bucket_name
     )
 
     # put sum USA summaries csv in root directory
     put_object(
         file = paste0(s3_filepath, "sum_job_loss_us.csv"),
-        "sum_job_loss_us.csv",
+        "all_jobs_sum_job_loss_us.csv",
         my_bucket_name
     )
 
     # put reshaped jsons in root directory
     put_object(
         file = paste0(s3_filepath, "sum_job_loss_county_reshaped.json"),
-        "reshaped/sum_job_loss_county_reshaped.json",
+        "reshaped/all_jobs_sum_job_loss_county_reshaped.json",
         my_bucket_name
     )
 
     put_object(
         file = paste0(s3_filepath, "sum_job_loss_cbsa_reshaped.json"),
-        "reshaped/sum_job_loss_cbsa_reshaped.json",
+        "reshaped/all_jobs_sum_job_loss_cbsa_reshaped.json",
         my_bucket_name
     )
 
     put_object(
         file = paste0(s3_filepath, "sum_job_loss_us.json"),
-        "reshaped/sum_job_loss_us.json",
+        "reshaped/all_jobs_sum_job_loss_us.json",
         my_bucket_name
     )
     
     # put IPUMS disemployment file in root directory
     put_object(
         file = paste0("data/processed-data/ipums/ipums_2014_18_disemployment_most_recent.csv"),
-        "ipums_2014_18_disemployment_most_recent.csv",
+        "all_jobs_ipums_2014_18_disemployment_most_recent.csv",
         my_bucket_name
     )
     

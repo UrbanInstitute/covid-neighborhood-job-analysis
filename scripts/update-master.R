@@ -34,7 +34,7 @@ source("scripts\\update\\2v4b-job-loss-by-industry-ces-sae-ipums-update.R", enco
 source("scripts\\update\\2v4c-job-loss-by-industry-ipums-update.R", encoding = "UTF-8")
 source("scripts\\update\\2v4d-job-loss-by-industry-ipums-summary-update.R", encoding = "UTF-8")
 source("scripts\\update\\3-produce-data-files-update.R", encoding = "UTF-8")
-source("scripts\\update\\4-produce-summary-stats-update.R", encoding = "UTF-8")
+# source("scripts\\update\\4-produce-summary-stats-update.R", encoding = "UTF-8")
 
 # stop because you need to review the histograms and confirm legend bounds
 stop()
