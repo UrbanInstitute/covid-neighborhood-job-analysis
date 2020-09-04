@@ -238,6 +238,8 @@ generate_job_loss_by_tract <- function(
             GEOID, state_name, county_name, state_fips,
             county_fips, cbsa, everything()
         ) %>%
+        rename(total_workers_employed = total_li_workers_employed,
+               worker_job_loss_rate = low_income_worker_job_loss_rate) %>%
         # round total jobs lost to integer for reader
         # for reader understandability (What is 1.3 jobs?)
         write_csv("data/processed-data/s3_final/job_loss_by_tract.csv")

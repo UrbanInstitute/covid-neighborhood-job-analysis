@@ -206,11 +206,15 @@ generate_county_cbsa_sum_files <- function(tmax_bins = tmax_bins,
     # write to csv
     county_sums %>%
         st_drop_geometry() %>%
+        rename(total_workers_employed = total_li_workers_employed,
+               worker_job_loss_rate = low_income_worker_job_loss_rate) %>%
         write_csv("data/processed-data/s3_final/sum_job_loss_county.csv")
 
     # write to csv
     cbsa_sums %>%
         st_drop_geometry() %>%
+        rename(total_workers_employed = total_li_workers_employed,
+               worker_job_loss_rate = low_income_worker_job_loss_rate) %>%
         write_csv("data/processed-data/s3_final/sum_job_loss_cbsa.csv")
 
 
