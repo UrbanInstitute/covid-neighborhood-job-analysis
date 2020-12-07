@@ -181,4 +181,4 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
 }
 
 
-job_change_all_corrected = generate_bls_percent_change_by_industry( )
+job_change_all_corrected = generate_bls_percent_change_by_industry()
