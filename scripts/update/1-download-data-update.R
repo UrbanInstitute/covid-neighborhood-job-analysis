@@ -11,7 +11,8 @@ update_bls_ces_data <- function(url =
    # No manual update needed
    download.file(
       url = url,
-      destfile = "data/raw-data/big/ces_all.txt"
+      destfile = "data/raw-data/big/ces_all.txt",
+      method = "curl"
    )
 }
 
@@ -21,7 +22,8 @@ update_bls_sae_data <- function(url =
    # No manual update needed
    download.file(
       url = url,
-      destfile = "data/raw-data/big/sae_all.txt"
+      destfile = "data/raw-data/big/sae_all.txt",
+      method = "curl"
    )
 }
 
@@ -33,19 +35,19 @@ update_wa_ny_qcew_data <- function(zip_url =
       url = zip_url,
       destfile = "data/raw-data/big/wa_qcew.zip"
    )
-   
+
    # Extract NY and WA data
    unzip("data/raw-data/big/wa_qcew.zip",
-         files = c("2019.q1-q3.by_area/2019.q1-q3 53000 Washington -- Statewide.csv"),
-         exdir = "data/raw-data/big"
+      files = c("2019.q1-q3.by_area/2019.q1-q3 53000 Washington -- Statewide.csv"),
+      exdir = "data/raw-data/big"
    )
-   
+
    unzip("data/raw-data/big/wa_qcew.zip",
-         files = c("2019.q1-q3.by_area/2019.q1-q3 36000 New York -- Statewide.csv"),
-         exdir = "data/raw-data/big"
+      files = c("2019.q1-q3.by_area/2019.q1-q3 36000 New York -- Statewide.csv"),
+      exdir = "data/raw-data/big"
    )
    file.remove("data/raw-data/big/wa_qcew.zip")
-   
+
    # Rename to more readable names
    file.rename(
       from = "data/raw-data/big/2019.q1-q3.by_area/2019.q1-q3 53000 Washington -- Statewide.csv",
@@ -55,7 +57,7 @@ update_wa_ny_qcew_data <- function(zip_url =
       from = "data/raw-data/big/2019.q1-q3.by_area/2019.q1-q3 36000 New York -- Statewide.csv",
       to = "data/raw-data/big/ny_qcew.csv"
    )
-   
+
    unlink("data/raw-data/big/2019.q1-q3.by_area", recursive = TRUE)
 }
 
@@ -64,13 +66,14 @@ update_all_us_qcew_data <- function(url =
    # Download all states data
    download.file(
       url = url,
-      destfile = "data/raw-data/big/us_qcew.zip"
+      destfile = "data/raw-data/big/us_qcew.zip",
+      method = "curl"
    )
-   
+
    # Extract and rename all us xlsx
    unzip("data/raw-data/big/us_qcew.zip",
-         files = c("allhlcn193.xlsx"),
-         exdir = "data/raw-data/big"
+      files = c("allhlcn193.xlsx"),
+      exdir = "data/raw-data/big"
    )
    file.remove("data/raw-data/big/us_qcew.zip")
    file.rename(
@@ -81,7 +84,7 @@ update_all_us_qcew_data <- function(url =
 update_wa_unemp_data <- function(week_num) {
    # week_num: The week number to get unemployment data. This needs to be
    # manually increased by 1 every week. As of 06/07/20, latest week_num = 17
-   
+
    # Download WA state unemployment estimates, most recent = week 17
    download.file(
       url = str_glue("https://esdorchardstorage.blob.core.windows.net/esdwa/Default/ESDWAGOV/labor-market-info/Libraries/Regional-reports/UI-Claims-Karen/2020 claims/UI claims week {week_num}_2020.xlsx"),
