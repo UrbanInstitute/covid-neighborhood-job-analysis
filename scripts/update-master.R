@@ -29,6 +29,12 @@ if (static) {
 }
 
 source("scripts/update/1-download-data-update.R", encoding = "UTF-8")
+
+# Filter CES and SAE data to just Novemnber to compare old incorect Nov data to
+# 'correct' Nov numbers
+source("scripts/update/1b-filter-downloaded-data.R", encoding = "UTF-8")
+
+
 source("scripts/update/2v4a-job-loss-projected-forward-ces.R", encoding = "UTF-8")
 source("scripts/update/2v4b-job-loss-by-industry-ces-sae-ipums-update.R", encoding = "UTF-8")
 source("scripts/update/2v4c-job-loss-by-industry-ipums-update.R", encoding = "UTF-8")
@@ -37,10 +43,8 @@ source("scripts/update/3-produce-data-files-update.R", encoding = "UTF-8")
 source("scripts/update/4-produce-summary-stats-update.R", encoding = "UTF-8")
 
 # stop because you need to review the histograms and confirm legend bounds
-stop()
+# stop()
 source("scripts/update/5-create-sum-files-update.R", encoding = "UTF-8")
 if (!dryrun) {
-    source("scripts/update/6-transfer-to-s3-update.R", encoding = "UTF-8")
+    # source("scripts/update/6-transfer-to-s3-update.R", encoding = "UTF-8")
 }
-
-
