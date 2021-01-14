@@ -30,7 +30,7 @@ if (static) {
 
 source("scripts/update/1-download-data-update.R", encoding = "UTF-8")
 
-# Filter CES and SAE data to just Novemnber to compare old incorect Nov data to
+# Filter CES and SAE data to just Nov to compare old incorrect Nov data to
 # 'correct' Nov numbers
 source("scripts/update/1b-filter-downloaded-data.R", encoding = "UTF-8")
 
