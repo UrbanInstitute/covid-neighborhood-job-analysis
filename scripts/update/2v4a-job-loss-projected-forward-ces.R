@@ -81,9 +81,15 @@ generate_bls_percent_change_by_industry = function(start_month_bls = 2,
   latest_month <- max(ces_series_latest$month)
   latest_year <- max(ces_series_latest$year)
   # Month before
-  ces_series_previous <- ces_series_subset_m %>%
-    filter(year == max(year)) %>%
-    filter(month == max(month) - 1)
+  if (latest_month == 1){
+    ces_series_previous <- ces_series_subset_m %>%
+      filter(year == (max(year) - 1)) %>%
+      filter(month == 12)    
+  } else {
+    ces_series_previous <- ces_series_subset_m %>%
+      filter(year == max(year)) %>%
+      filter(month == max(month) - 1)
+  }
   # Reference month
   ces_series_reference <- ces_series_subset_m %>%
     filter(year == start_year_bls) %>%

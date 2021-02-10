@@ -55,3 +55,6 @@ data/processed-data/ipums/
 
 #secret keys
 data/raw-data/small/secret_keys.csv
+
+# Libreoffice lock files
+*~lock*
