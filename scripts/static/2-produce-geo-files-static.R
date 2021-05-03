@@ -4,11 +4,6 @@
 
 library(tidyverse)
 library(sf)
-library(jsonlite)
-library(testit)
-
-options(scipen = 999)
-
 
 #----Get counties around South Dakota --------------------------
 # We do this bc WAC is missing in 2017 for south dakota, 
@@ -16,36 +11,36 @@ options(scipen = 999)
 
 my_counties <- st_read("data/raw-data/big/counties.geojson")
 
+#Update 05/2021 - South Dakota was backfilled so this step is no longer needed
 
 # keep just south dakota
-south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP == "46")
+#south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP == "46")
 
 # keep every county except south dakota in order to join
-not_south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP!= "46")
+#not_south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP!= "46")
 
 # do join to find counties around south dakota
-around_sd<- st_join( not_south_dakota, 
-                     south_dakota,
-                     #We want counties outside SD that touch SD,
-                     # so we use st_touches
-                     join = st_touches,
-                     left = FALSE,
-                     suffix = c("_not_sd", "_sd")) %>% 
-  # Pull unique geoids of counties bordering South Dakota
-  pull(GEOID_not_sd) %>% 
-  unique()
+# around_sd<- st_join( not_south_dakota, 
+#                      south_dakota,
+#                      #We want counties outside SD that touch SD,
+#                      # so we use st_touches
+#                      join = st_touches,
+#                      left = FALSE,
+#                      suffix = c("_not_sd", "_sd")) %>% 
+#   # Pull unique geoids of counties bordering South Dakota
+#   pull(GEOID_not_sd) %>% 
+#   unique()
 
 
-# remove geometry and create variable that is 1 if data is in south dakota 
-# or alaska, or around south dakota. 
-# both south dakota and alaska are missing from wac 2017
-around_sd_df = my_counties %>% 
+# remove geometry and create variable that is 1 if data is in alaska
+# alaska is missing from wac 2018 and wac 2017
+counties_to_get_2016= my_counties %>% 
   st_drop_geometry() %>% 
-  mutate(should_be_2016 = ifelse(STATEFP %in% c("46", "02") | GEOID %in% around_sd, 1, 0)) %>% 
+  mutate(should_be_2016 = ifelse(STATEFP %in%  "02", 1, 0)) %>% 
   select(county_fips = GEOID, should_be_2016) 
 
 # write out data to choose which tracts we need to use 2016 for
-write_csv(around_sd_df, "data/processed-data/counties_to_get_2016.csv")
+write_csv(counties_to_get_2016, "data/processed-data/counties_to_get_2016.csv")
 
 
 #---------

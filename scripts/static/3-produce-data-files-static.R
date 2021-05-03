@@ -11,7 +11,7 @@ lodes_all_raw <- read_csv(paste0(path, "rac_all.csv"))
 # Read in Lodes data for income over 40k
 lodes_over_40_raw <- read_csv(paste0(path, "rac_se03.csv")) 
 
-# Read in data that we will use 2016 data for given data issues in 2017
+# Read in data that we will use 2016 data for given data issues in 2018
 counties_to_get_2016 <- read_csv("data/processed-data/counties_to_get_2016.csv")
 
 
@@ -24,16 +24,16 @@ clean_lodes <- function(df){
     # join data to choose 2016 data
     left_join(counties_to_get_2016, by = c("cty"="county_fips")) 
   
-  # keep 2016 data for counties around and inside south dakota and alaska
+  # keep 2016 data for counties in alaska
   dat_2016<- dat_temp %>%
     filter(year == 2016 & should_be_2016 == 1) 
   
-  # keep 2017 data for counties not around and inside south dakota and alaska
-  dat_2017<- dat_temp %>% 
-    filter(year == 2017 & (should_be_2016 !=1 | is.na(should_be_2016)))
+  # keep 2018 data for counties not in alaska
+  dat_2018<- dat_temp %>% 
+    filter(year == 2018 & (should_be_2016 !=1 | is.na(should_be_2016)))
   
   # append rows together
-  my_df <- bind_rows(dat_2017, dat_2016)
+  my_df <- bind_rows(dat_2018, dat_2016)
   
   my_df %>%
     # delete unneded vars
