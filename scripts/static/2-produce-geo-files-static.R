@@ -5,35 +5,13 @@
 library(tidyverse)
 library(sf)
 
-#----Get counties around South Dakota --------------------------
-# We do this bc WAC is missing in 2017 for south dakota, 
-# which means RAC will be undercounted in surrounding area
+#----Get counties for Alaska to set to previous years  --------------------------
+# We do this because WAC is missing in 2017 and 2018 for Alaska
 
 my_counties <- st_read("data/raw-data/big/counties.geojson")
 
-#Update 05/2021 - South Dakota was backfilled so this step is no longer needed
-
-# keep just south dakota
-#south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP == "46")
-
-# keep every county except south dakota in order to join
-#not_south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP!= "46")
-
-# do join to find counties around south dakota
-# around_sd<- st_join( not_south_dakota, 
-#                      south_dakota,
-#                      #We want counties outside SD that touch SD,
-#                      # so we use st_touches
-#                      join = st_touches,
-#                      left = FALSE,
-#                      suffix = c("_not_sd", "_sd")) %>% 
-#   # Pull unique geoids of counties bordering South Dakota
-#   pull(GEOID_not_sd) %>% 
-#   unique()
-
 
 # remove geometry and create variable that is 1 if data is in alaska
-# alaska is missing from wac 2018 and wac 2017
 counties_to_get_2016= my_counties %>% 
   st_drop_geometry() %>% 
   mutate(should_be_2016 = ifelse(STATEFP %in%  "02", 1, 0)) %>% 
