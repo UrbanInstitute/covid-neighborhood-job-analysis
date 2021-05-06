@@ -157,13 +157,16 @@ generate_job_loss_by_tract <- function(
         by = c("GEOID" = "trct")
     )
 
-    # The 2018 Census tract file has one tract not found in the LODES data
-    # This is tract 12086981000 near Miami Beach in Florida & has a population
-    # of 62. For now we exlcude this tract from the analysis
+    # The 2018 Census tract file has four tracts not found in the LODES data
+    # Three of these tracts have zero population according to the 2019 5-Year ACS, 
+    # and the last, 27163070801, has a population of 951. These tracts are excluded from the analysis. 
     job_loss_wide_sf <- job_loss_wide_sf %>%
-        filter(GEOID != "12086981000")
+        filter(!GEOID %in% c("12086981000", 
+                             "06095980000", 
+                             "27163070801", 
+                             "48451980000"))
 
-    # Check that the tracts contianed in job_loss_wide are the same after
+    # Check that the tracts contained in job_loss_wide are the same after
     # adding spatial info
     assert(
         "job_loss_wide_sf has a different number of rows that job_loss_wide",

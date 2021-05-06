@@ -42,9 +42,10 @@ dl <- state_fips %>% map(download_by_state)
 
 # All jobs, RAC
 download.file(
-  url = "https://ui-spark-data-public.s3.amazonaws.com/lodes/summarized-files/Tract_level/all_jobs_excluding_fed_jobs/rac_all_tract_level.csv",
+  url = "https://urban-data-catalog.s3.amazonaws.com/drupal-root-live/2021/04/19/rac_all_tract_minus_fed.csv",
   destfile = "data/raw-data/big/rac_all.csv"
 )
+
 
 #----Download cbsas, counties,PUMA's and states from tigris------------
 
