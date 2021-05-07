@@ -4,48 +4,21 @@
 
 library(tidyverse)
 library(sf)
-library(jsonlite)
-library(testit)
 
-options(scipen = 999)
-
-
-#----Get counties around South Dakota --------------------------
-# We do this bc WAC is missing in 2017 for south dakota, 
-# which means RAC will be undercounted in surrounding area
+#----Get counties for Alaska to set to previous years  --------------------------
+# We do this because WAC is missing in 2017 and 2018 for Alaska
 
 my_counties <- st_read("data/raw-data/big/counties.geojson")
 
 
-# keep just south dakota
-south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP == "46")
-
-# keep every county except south dakota in order to join
-not_south_dakota <- filter(my_counties %>% select(GEOID, STATEFP), STATEFP!= "46")
-
-# do join to find counties around south dakota
-around_sd<- st_join( not_south_dakota, 
-                     south_dakota,
-                     #We want counties outside SD that touch SD,
-                     # so we use st_touches
-                     join = st_touches,
-                     left = FALSE,
-                     suffix = c("_not_sd", "_sd")) %>% 
-  # Pull unique geoids of counties bordering South Dakota
-  pull(GEOID_not_sd) %>% 
-  unique()
-
-
-# remove geometry and create variable that is 1 if data is in south dakota 
-# or alaska, or around south dakota. 
-# both south dakota and alaska are missing from wac 2017
-around_sd_df = my_counties %>% 
+# remove geometry and create variable that is 1 if data is in alaska
+counties_to_get_2016= my_counties %>% 
   st_drop_geometry() %>% 
-  mutate(should_be_2016 = ifelse(STATEFP %in% c("46", "02") | GEOID %in% around_sd, 1, 0)) %>% 
+  mutate(should_be_2016 = ifelse(STATEFP %in%  "02", 1, 0)) %>% 
   select(county_fips = GEOID, should_be_2016) 
 
 # write out data to choose which tracts we need to use 2016 for
-write_csv(around_sd_df, "data/processed-data/counties_to_get_2016.csv")
+write_csv(counties_to_get_2016, "data/processed-data/counties_to_get_2016.csv")
 
 
 #---------
@@ -205,6 +178,8 @@ jsonlite::write_json(county_to_cbsa, 'data/processed-data/CountyToCbsa2.json')
 
 # Read in pumas
 my_pumas <- st_read("data/raw-data/big/pumas.geojson")
+
+pop_centers_2010 <- read_csv("data/raw-data/small/pop_centers_2010_tracts.csv")
 
 # Generate tract population centroids
 x = my_tracts %>%

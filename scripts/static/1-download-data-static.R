@@ -42,13 +42,13 @@ dl <- state_fips %>% map(download_by_state)
 
 # All jobs, RAC
 download.file(
-  url = "https://ui-spark-data-public.s3.amazonaws.com/lodes/summarized-files/Tract_level/all_jobs_excluding_fed_jobs/rac_all_tract_level.csv",
+  url = "https://urban-data-catalog.s3.amazonaws.com/drupal-root-live/2021/04/19/rac_all_tract_minus_fed.csv",
   destfile = "data/raw-data/big/rac_all.csv"
 )
 
 # All jobs, RAC, >=$40,000 per year
 download.file(
-  url = "https://urban-data-catalog.s3.amazonaws.com/drupal-root-live/2020/03/30/rac_se03_tract.csv",
+  url = "https://urban-data-catalog.s3.amazonaws.com/drupal-root-live/2021/04/19/rac_all_se03_tract_minus_fed.csv",
   destfile = "data/raw-data/big/rac_se03.csv"
 )
 
