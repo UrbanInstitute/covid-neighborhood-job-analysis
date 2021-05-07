@@ -179,6 +179,8 @@ jsonlite::write_json(county_to_cbsa, 'data/processed-data/CountyToCbsa2.json')
 # Read in pumas
 my_pumas <- st_read("data/raw-data/big/pumas.geojson")
 
+pop_centers_2010 <- read_csv("data/raw-data/small/pop_centers_2010_tracts.csv")
+
 # Generate tract population centroids
 x = my_tracts %>%
     left_join(pop_centers_2010 %>%
