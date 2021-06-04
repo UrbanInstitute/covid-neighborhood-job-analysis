@@ -6,7 +6,7 @@ library(testit)
 
 # Set static=TRUE if its your first time running the scripts, FALSE otherwise.
 # This runs the scripts located in the sctips/static folder
-static <- TRUE
+static <- FALSE
 
 # set dryrun = FALSE if you want to upload files to S3. Most users can safely
 # set dryrun = TRUE
@@ -14,8 +14,8 @@ dryrun <- FALSE
 
 # Set bin values for legend bins and histograms. The histogram needs to be
 # manually reviewed and may need to change these values
-tmax_bins <- c(100, 150, 200, 250, 625)
-max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 10000, 175000)
+tmax_bins <- c(100, 150, 200, 250, 600)
+max_bins <- c(100, 250, 500, 750, 1000, 2000, 5000, 10000, 150000)
 
 
 
