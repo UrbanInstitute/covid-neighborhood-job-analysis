@@ -58,3 +58,6 @@ data/raw-data/small/secret_keys.csv
 
 # Libreoffice lock files
 *~lock*
+data/.DS_Store
+.DS_Store
+data/raw-data/.DS_Store
